@@ -1,6 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Merriweather&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,16 +19,16 @@
     --popover: 240 5% 90%;
     --popover-foreground: 240 5% 10%;
 
-    --primary: 333 71% 50%;
+    --primary: 6 57% 54%;
     --primary-foreground: 327 73% 97%;
 
-    --secondary: 240 5% 33%;
+    --secondary: 5 57% 28%;
     --secondary-foreground: 0 0% 98%;
 
     --muted: 240 4% 83%;
     --muted-foreground: 240 5% 10%;
 
-    --accent: 355 100% 97%;
+    --accent: 0 0% 100%;
     --accent-foreground: 349 89% 60%;
 
     --destructive: 0 72% 50%;
