@@ -17,7 +17,7 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-rubik text-2xl font-bold text-heading">
-          <img src="/images/logo.png" alt="סטודיו דוריאן" className="h-10 w-auto" />
+          <img src="/images/logo.png" alt="סטודיו דוריאן" className="h-10 w-auto mix-blend-multiply" />
           סטודיו דוריאן
         </Link>
 
