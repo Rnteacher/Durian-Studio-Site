@@ -13,7 +13,7 @@ const HeroSection = () => {
 
       {/* Floating decorative circles */}
       <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/5 flex items-center justify-center overflow-hidden">
-        <img src="/images/logo.png" alt="סטודיו דוריאן" className="w-40 h-40 object-contain mix-blend-multiply opacity-30" />
+        <img src="/images/durian-logo.jpeg" alt="סטודיו דוריאן" className="w-40 h-40 object-contain mix-blend-multiply opacity-30" />
       </div>
       <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-secondary/30" />
 
