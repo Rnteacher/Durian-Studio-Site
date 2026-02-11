@@ -12,7 +12,9 @@ const HeroSection = () => {
       <div className="absolute bottom-20 right-1/3 text-5xl opacity-10 select-none">🧵</div>
 
       {/* Floating decorative circles */}
-      <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/5" />
+      <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/5 flex items-center justify-center overflow-hidden">
+        <img src="/images/logo.png" alt="סטודיו דוריאן" className="w-40 h-40 object-contain mix-blend-multiply opacity-30" />
+      </div>
       <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-secondary/30" />
 
       <div className="container mx-auto px-4 text-center relative z-10">
