@@ -115,7 +115,7 @@ export const students: Student[] = [
     name: "עידן",
     shortDescription: "מהנדס רובוטיקה ואלקטרוניקה צעיר ויצירתי",
     longDescription: "עידן בונה רובוטים ומערכות אלקטרוניות מאפס. הוא משלב בין תכנות, חומרה ויצירתיות כדי ליצור פתרונות טכנולוגיים חדשניים. התשוקה שלו לטכנולוגיה מניעה אותו ליצור דברים מדהימים.",
-    image: "/placeholder.svg",
+    image: "/images/idan.jpeg",
     categories: ["מחשבים וטכנולוגיה"],
     services: ["רובוטיקה", "אלקטרוניקה"],
     contact: { email: "idan@studio-dorian.co.il", phone: "050-0000010" },
