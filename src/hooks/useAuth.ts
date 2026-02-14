@@ -5,14 +5,17 @@ import React from "react";
 
 async function checkAdmin(userId: string): Promise<boolean> {
   try {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
+    const { data, error } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (error) {
+      console.error("[checkAdmin] RPC error:", error.message);
+      return false;
+    }
     return !!data;
-  } catch {
+  } catch (e) {
+    console.error("[checkAdmin] exception:", e);
     return false;
   }
 }
