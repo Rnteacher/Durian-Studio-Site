@@ -92,6 +92,8 @@ export type Database = {
           long_description: string
           name: string
           phone: string
+          portfolio_url: string | null
+          resume_url: string | null
           services: Json
           short_description: string
           tiktok: string | null
@@ -108,6 +110,8 @@ export type Database = {
           long_description?: string
           name: string
           phone?: string
+          portfolio_url?: string | null
+          resume_url?: string | null
           services?: Json
           short_description?: string
           tiktok?: string | null
@@ -124,6 +128,8 @@ export type Database = {
           long_description?: string
           name?: string
           phone?: string
+          portfolio_url?: string | null
+          resume_url?: string | null
           services?: Json
           short_description?: string
           tiktok?: string | null

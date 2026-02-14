@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, ArrowRight } from "lucide-react";
+import { Mail, Phone, ArrowRight, ExternalLink, FileText } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -88,6 +88,22 @@ const StudentProfile = () => {
                     ))}
                   </div>
                 )}
+                <div className="flex flex-wrap gap-3 mb-4">
+                  {student.portfolioUrl && (
+                    <a href={student.portfolioUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="gap-1.5">
+                        <ExternalLink className="h-4 w-4" />תיק עבודות
+                      </Button>
+                    </a>
+                  )}
+                  {student.resumeUrl && (
+                    <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="gap-1.5">
+                        <FileText className="h-4 w-4" />רזומה
+                      </Button>
+                    </a>
+                  )}
+                </div>
                 <p className="text-base leading-relaxed text-foreground">{student.longDescription}</p>
               </div>
             </div>

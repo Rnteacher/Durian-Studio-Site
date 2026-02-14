@@ -9,6 +9,8 @@ export interface Student {
   image: string;
   categories: string[];
   services: Record<string, string[]>;
+  portfolioUrl?: string;
+  resumeUrl?: string;
   contact: {
     email: string;
     phone: string;
@@ -29,6 +31,8 @@ function mapRow(row: any): Student {
     image: row.image,
     categories: row.categories || [],
     services: (row.services as Record<string, string[]>) || {},
+    portfolioUrl: row.portfolio_url || undefined,
+    resumeUrl: row.resume_url || undefined,
     contact: {
       email: row.email,
       phone: row.phone,

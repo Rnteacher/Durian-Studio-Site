@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudents } from "@/hooks/useStudents";
 import { useServices } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, Plus, LogOut, X } from "lucide-react";
+import { Pencil, Trash2, Plus, LogOut, X, Upload, Loader2 } from "lucide-react";
 
 // ─── Student Form ───
 interface StudentForm {
@@ -31,12 +31,15 @@ interface StudentForm {
   instagram: string;
   facebook: string;
   tiktok: string;
+  portfolio_url: string;
+  resume_url: string;
 }
 
 const emptyStudentForm: StudentForm = {
   id: "", name: "", short_description: "", long_description: "",
   image: "/placeholder.svg", categories: "", services: {},
   email: "", phone: "", instagram: "", facebook: "", tiktok: "",
+  portfolio_url: "", resume_url: "",
 };
 
 // ─── Service Form ───
@@ -55,6 +58,16 @@ const emptyServiceForm: ServiceForm = {
   image: "/placeholder.svg", linkedStudentIds: [],
 };
 
+// ─── Image Upload Helper ───
+async function uploadImage(file: File, folder: string): Promise<string | null> {
+  const ext = file.name.split(".").pop();
+  const path = `${folder}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("images").upload(path, file);
+  if (error) return null;
+  const { data } = supabase.storage.from("images").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 const Admin = () => {
   const { user, loading: authLoading, isAdmin, signOut } = useAuth();
   const { data: students, isLoading: studentsLoading } = useStudents();
@@ -68,11 +81,15 @@ const Admin = () => {
   const [studentForm, setStudentForm] = useState<StudentForm>(emptyStudentForm);
   const [isNewStudent, setIsNewStudent] = useState(false);
   const [newServiceInputs, setNewServiceInputs] = useState<Record<string, string>>({});
+  const [uploadingStudentImage, setUploadingStudentImage] = useState(false);
+  const studentImageRef = useRef<HTMLInputElement>(null);
 
   // Service state
   const [serviceEditOpen, setServiceEditOpen] = useState(false);
   const [serviceForm, setServiceForm] = useState<ServiceForm>(emptyServiceForm);
   const [isNewService, setIsNewService] = useState(false);
+  const [uploadingServiceImage, setUploadingServiceImage] = useState(false);
+  const serviceImageRef = useRef<HTMLInputElement>(null);
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center">טוען...</div>;
   if (!user) return <Navigate to="/admin/login" replace />;
@@ -88,6 +105,35 @@ const Admin = () => {
 
   const handleLogout = async () => { await signOut(); navigate("/"); };
 
+  // ─── Image Upload Handlers ───
+  const handleStudentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingStudentImage(true);
+    const url = await uploadImage(file, "students");
+    setUploadingStudentImage(false);
+    if (url) {
+      setStudentForm(prev => ({ ...prev, image: url }));
+      toast({ title: "התמונה הועלתה בהצלחה!" });
+    } else {
+      toast({ title: "שגיאה בהעלאת תמונה", variant: "destructive" });
+    }
+  };
+
+  const handleServiceImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingServiceImage(true);
+    const url = await uploadImage(file, "services");
+    setUploadingServiceImage(false);
+    if (url) {
+      setServiceForm(prev => ({ ...prev, image: url }));
+      toast({ title: "התמונה הועלתה בהצלחה!" });
+    } else {
+      toast({ title: "שגיאה בהעלאת תמונה", variant: "destructive" });
+    }
+  };
+
   // ─── Student CRUD ───
   const categoriesList = studentForm.categories.split(",").map(s => s.trim()).filter(Boolean);
 
@@ -101,6 +147,8 @@ const Admin = () => {
       instagram: student.contact.socials?.instagram || "",
       facebook: student.contact.socials?.facebook || "",
       tiktok: student.contact.socials?.tiktok || "",
+      portfolio_url: student.portfolioUrl || "",
+      resume_url: student.resumeUrl || "",
     });
     setNewServiceInputs({});
     setIsNewStudent(false);
@@ -130,6 +178,8 @@ const Admin = () => {
       image: studentForm.image, categories: cats, services: cleanServices,
       email: studentForm.email, phone: studentForm.phone,
       instagram: studentForm.instagram || null, facebook: studentForm.facebook || null, tiktok: studentForm.tiktok || null,
+      portfolio_url: studentForm.portfolio_url || null,
+      resume_url: studentForm.resume_url || null,
     };
     const { error } = isNewStudent
       ? await supabase.from("students").insert(payload)
@@ -147,7 +197,6 @@ const Admin = () => {
 
   // ─── Service CRUD ───
   const openEditService = async (service: any) => {
-    // Fetch linked students
     const { data: links } = await supabase.from("service_students").select("student_id").eq("service_id", service.id);
     setServiceForm({
       id: service.id, slug: service.slug, title: service.title,
@@ -185,11 +234,9 @@ const Admin = () => {
     } else {
       const { error } = await supabase.from("services").update(payload).eq("id", serviceForm.id);
       if (error) { toast({ title: "שגיאה", description: error.message, variant: "destructive" }); return; }
-      // Clear existing links
       await supabase.from("service_students").delete().eq("service_id", serviceForm.id);
     }
 
-    // Insert new links
     if (serviceForm.linkedStudentIds.length > 0) {
       const rows = serviceForm.linkedStudentIds.map(sid => ({ service_id: serviceId, student_id: sid }));
       await supabase.from("service_students").insert(rows);
@@ -290,8 +337,25 @@ const Admin = () => {
               )}
               <Input placeholder="שם" value={studentForm.name} onChange={e => setStudentForm({...studentForm, name: e.target.value})} />
               <Input placeholder="תיאור קצר" value={studentForm.short_description} onChange={e => setStudentForm({...studentForm, short_description: e.target.value})} />
-              <Textarea placeholder="תיאור מלא" value={studentForm.long_description} onChange={e => setStudentForm({...studentForm, long_description: e.target.value})} rows={3} />
-              <Input placeholder="קישור תמונה" value={studentForm.image} onChange={e => setStudentForm({...studentForm, image: e.target.value})} dir="ltr" />
+              <Textarea placeholder="ביוגרפיה / תיאור מלא" value={studentForm.long_description} onChange={e => setStudentForm({...studentForm, long_description: e.target.value})} rows={4} />
+              
+              {/* Image upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-heading">תמונה</label>
+                <div className="flex items-center gap-3">
+                  {studentForm.image && studentForm.image !== "/placeholder.svg" && (
+                    <img src={studentForm.image} alt="תצוגה מקדימה" className="w-16 h-16 rounded-lg object-cover" />
+                  )}
+                  <div className="flex-1 flex gap-2">
+                    <Input placeholder="קישור תמונה" value={studentForm.image} onChange={e => setStudentForm({...studentForm, image: e.target.value})} dir="ltr" className="flex-1" />
+                    <input type="file" accept="image/*" ref={studentImageRef} className="hidden" onChange={handleStudentImageUpload} />
+                    <Button type="button" variant="outline" size="icon" onClick={() => studentImageRef.current?.click()} disabled={uploadingStudentImage}>
+                      {uploadingStudentImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
               <Input placeholder="קטגוריות (מופרדות בפסיק)" value={studentForm.categories} onChange={e => setStudentForm({...studentForm, categories: e.target.value})} />
               
               {categoriesList.length > 0 && (
@@ -318,6 +382,12 @@ const Admin = () => {
                 </div>
               )}
 
+              <div className="border rounded-lg p-3 space-y-3">
+                <p className="text-sm font-semibold text-heading">קישורים</p>
+                <Input placeholder="קישור לתיק עבודות (אופציונלי)" value={studentForm.portfolio_url} onChange={e => setStudentForm({...studentForm, portfolio_url: e.target.value})} dir="ltr" />
+                <Input placeholder="קישור לרזומה (אופציונלי)" value={studentForm.resume_url} onChange={e => setStudentForm({...studentForm, resume_url: e.target.value})} dir="ltr" />
+              </div>
+
               <Input placeholder="אימייל" value={studentForm.email} onChange={e => setStudentForm({...studentForm, email: e.target.value})} dir="ltr" />
               <Input placeholder="טלפון" value={studentForm.phone} onChange={e => setStudentForm({...studentForm, phone: e.target.value})} dir="ltr" />
               <Input placeholder="אינסטגרם (אופציונלי)" value={studentForm.instagram} onChange={e => setStudentForm({...studentForm, instagram: e.target.value})} dir="ltr" />
@@ -339,7 +409,23 @@ const Admin = () => {
               <Input placeholder="שם השירות" value={serviceForm.title} onChange={e => setServiceForm({...serviceForm, title: e.target.value})} />
               <Input placeholder="תיאור קצר" value={serviceForm.short_description} onChange={e => setServiceForm({...serviceForm, short_description: e.target.value})} />
               <Textarea placeholder="תיאור מלא" value={serviceForm.long_description} onChange={e => setServiceForm({...serviceForm, long_description: e.target.value})} rows={4} />
-              <Input placeholder="קישור תמונה" value={serviceForm.image} onChange={e => setServiceForm({...serviceForm, image: e.target.value})} dir="ltr" />
+              
+              {/* Image upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-heading">תמונה</label>
+                <div className="flex items-center gap-3">
+                  {serviceForm.image && serviceForm.image !== "/placeholder.svg" && (
+                    <img src={serviceForm.image} alt="תצוגה מקדימה" className="w-16 h-10 rounded-lg object-cover" />
+                  )}
+                  <div className="flex-1 flex gap-2">
+                    <Input placeholder="קישור תמונה" value={serviceForm.image} onChange={e => setServiceForm({...serviceForm, image: e.target.value})} dir="ltr" className="flex-1" />
+                    <input type="file" accept="image/*" ref={serviceImageRef} className="hidden" onChange={handleServiceImageUpload} />
+                    <Button type="button" variant="outline" size="icon" onClick={() => serviceImageRef.current?.click()} disabled={uploadingServiceImage}>
+                      {uploadingServiceImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
               {/* Link students */}
               <div className="border rounded-lg p-3 space-y-2">
