@@ -3,13 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
 async function checkAdmin(userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  return !!data;
+  try {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    return !!data;
+  } catch {
+    return false;
+  }
 }
 
 export function useAuth() {
@@ -20,38 +24,37 @@ export function useAuth() {
 
   useEffect(() => {
     let isMounted = true;
+    let initialSessionHandled = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      (_event, newSession) => {
         if (!isMounted) return;
         setSession(newSession);
         setUser(newSession?.user ?? null);
-        if (newSession?.user) {
-          // Use setTimeout to avoid potential Supabase deadlock
-          setTimeout(async () => {
-            if (!isMounted) return;
-            const admin = await checkAdmin(newSession.user.id);
-            if (isMounted) {
-              setIsAdmin(admin);
-              setLoading(false);
-            }
-          }, 0);
-        } else {
+
+        if (!newSession?.user) {
           setIsAdmin(false);
           setLoading(false);
+          return;
+        }
+
+        // Skip if getSession already handled the initial load
+        if (initialSessionHandled) {
+          checkAdmin(newSession.user.id).then((admin) => {
+            if (isMounted) setIsAdmin(admin);
+          });
         }
       }
     );
 
     supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       if (!isMounted) return;
+      initialSessionHandled = true;
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       if (currentSession?.user) {
         const admin = await checkAdmin(currentSession.user.id);
-        if (isMounted) {
-          setIsAdmin(admin);
-        }
+        if (isMounted) setIsAdmin(admin);
       }
       if (isMounted) setLoading(false);
     });
