@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      service_students: {
+        Row: {
+          id: string
+          service_id: string
+          student_id: string
+        }
+        Insert: {
+          id?: string
+          service_id: string
+          student_id: string
+        }
+        Update: {
+          id?: string
+          service_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_students_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          created_at: string
+          id: string
+          image: string
+          long_description: string
+          short_description: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image?: string
+          long_description?: string
+          short_description?: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image?: string
+          long_description?: string
+          short_description?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           categories: string[]
