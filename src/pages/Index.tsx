@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import StudentGrid from "@/components/StudentGrid";
+import ServicesSection from "@/components/ServicesSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -9,7 +9,7 @@ const Index = () => {
       <Navbar />
       <main className="flex-1">
         <HeroSection />
-        <StudentGrid />
+        <ServicesSection />
       </main>
       <Footer />
     </div>
