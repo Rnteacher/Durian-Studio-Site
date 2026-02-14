@@ -37,26 +37,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Safety timeout
     const timeout = setTimeout(() => {
       if (isMounted) setLoading(false);
     }, 5000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      (_event, newSession) => {
         if (!isMounted) return;
         setSession(newSession);
         setUser(newSession?.user ?? null);
-        if (newSession?.user) {
+        if (!newSession?.user) {
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+        // Defer admin check so the client has updated its auth headers
+        setTimeout(async () => {
+          if (!isMounted) return;
           const admin = await checkAdmin(newSession.user.id);
           if (isMounted) {
             setIsAdmin(admin);
             setLoading(false);
           }
-        } else {
-          setIsAdmin(false);
-          setLoading(false);
-        }
+        }, 0);
       }
     );
 
