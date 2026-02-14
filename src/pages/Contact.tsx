@@ -6,9 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useServices } from "@/hooks/useServices";
 
 const Contact = () => {
   const { toast } = useToast();
+  const { data: services = [] } = useServices();
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,6 +24,7 @@ const Contact = () => {
     e.preventDefault();
     toast({ title: "ההודעה נשלחה!", description: "תודה שפנית אלינו, נחזור אליך בהקדם." });
     setFormData({ name: "", email: "", phone: "", service: "", message: "" });
+    setSelectedCategory("");
   };
 
   return (
@@ -38,7 +42,7 @@ const Contact = () => {
           {/* Studio email */}
           <div className="flex items-center justify-center gap-2 bg-card rounded-xl p-4 shadow-sm mb-10">
             <Mail className="h-5 w-5 text-primary" />
-            <span className="font-medium">studio.dorian@example.co.il</span>
+            <span className="font-medium">studio@chamama.org</span>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -64,12 +68,59 @@ const Contact = () => {
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="bg-card"
             />
-            <Input
-              placeholder="שירות מבוקש"
-              value={formData.service}
-              onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-              className="bg-card"
-            />
+            {/* Category & Service selection */}
+            {(() => {
+              const categoryMap = new Map<string, string[]>();
+              services.forEach(s => {
+                const cat = s.category || "כללי";
+                if (!categoryMap.has(cat)) categoryMap.set(cat, []);
+                categoryMap.get(cat)!.push(s.title);
+              });
+              const categories = [...categoryMap.keys()];
+              const servicesInCategory = selectedCategory ? categoryMap.get(selectedCategory) || [] : [];
+
+              return (
+                <>
+                  <select
+                    value={selectedCategory}
+                    onChange={e => {
+                      setSelectedCategory(e.target.value);
+                      setFormData({ ...formData, service: "" });
+                    }}
+                    className="flex h-12 w-full rounded-xl border border-input bg-card px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="">בחרו קטגוריה...</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                    <option value="__other__">אחר</option>
+                  </select>
+
+                  {selectedCategory && selectedCategory !== "__other__" && servicesInCategory.length > 0 && (
+                    <select
+                      value={formData.service}
+                      onChange={e => setFormData({ ...formData, service: e.target.value })}
+                      className="flex h-12 w-full rounded-xl border border-input bg-card px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    >
+                      <option value="">בחרו שירות...</option>
+                      {servicesInCategory.map(svc => (
+                        <option key={svc} value={svc}>{svc}</option>
+                      ))}
+                      <option value="__other__">אחר</option>
+                    </select>
+                  )}
+
+                  {(selectedCategory === "__other__" || formData.service === "__other__") && (
+                    <Input
+                      placeholder="פרטו את השירות המבוקש"
+                      value={selectedCategory === "__other__" ? formData.service : ""}
+                      onChange={e => setFormData({ ...formData, service: e.target.value })}
+                      className="bg-card"
+                    />
+                  )}
+                </>
+              );
+            })()}
             <Textarea
               placeholder="הודעה"
               value={formData.message}
