@@ -48,7 +48,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "סטודיו דוריאן <noreply@chamama.org>",
+        from: "סטודיו דוריאן <onboarding@resend.dev>",
         to: ["studio@chamama.org"],
         reply_to: email,
         subject: `פנייה חדשה מ${name} — סטודיו דוריאן`,
