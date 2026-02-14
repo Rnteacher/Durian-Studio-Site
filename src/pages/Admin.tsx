@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudents } from "@/hooks/useStudents";
 import { useServices } from "@/hooks/useServices";
@@ -75,7 +75,7 @@ const Admin = () => {
   const [isNewService, setIsNewService] = useState(false);
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center">טוען...</div>;
-  if (!user) { navigate("/admin/login"); return null; }
+  if (!user) return <Navigate to="/admin/login" replace />;
   if (!isAdmin) return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
