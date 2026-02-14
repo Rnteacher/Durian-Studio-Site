@@ -35,10 +35,10 @@ const HeroSection = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild size="lg" className="text-lg px-8 bg-primary hover:bg-heading">
-            <Link to="/about">אודות</Link>
+            <a href="#services">גלו את השירותים שלנו</a>
           </Button>
           <Button asChild variant="outline" size="lg" className="text-lg px-8 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-            <Link to="/contact">יצירת קשר</Link>
+            <Link to="/students">החניכים שלנו</Link>
           </Button>
         </div>
       </div>

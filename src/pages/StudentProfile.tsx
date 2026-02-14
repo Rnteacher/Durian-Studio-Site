@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useStudent } from "@/hooks/useStudents";
+import { useStudentServices } from "@/hooks/useServices";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 const StudentProfile = () => {
   const { id } = useParams<{ id: string }>();
   const { data: student, isLoading } = useStudent(id);
+  const { data: linkedServices = [] } = useStudentServices(id);
   const { toast } = useToast();
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
 
@@ -74,7 +76,18 @@ const StudentProfile = () => {
                 <h1 className="font-rubik text-4xl md:text-5xl font-extrabold text-heading mb-3">
                   {student.name}
                 </h1>
-                <p className="text-lg text-muted-foreground mb-6">{student.shortDescription}</p>
+                <p className="text-lg text-muted-foreground mb-4">{student.shortDescription}</p>
+                {linkedServices.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {linkedServices.map((svc) => (
+                      <Link key={svc.id} to={`/services/${svc.slug}`}>
+                        <Badge variant="default" className="cursor-pointer text-sm px-3 py-1 bg-primary text-primary-foreground hover:bg-heading">
+                          {svc.title}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                )}
                 <p className="text-base leading-relaxed text-foreground">{student.longDescription}</p>
               </div>
             </div>

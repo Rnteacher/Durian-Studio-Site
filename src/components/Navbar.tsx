@@ -8,9 +8,11 @@ const Navbar = () => {
   const location = useLocation();
 
   const links = [
-  { to: "/", label: "בית" },
-  { to: "/about", label: "אודות" },
-  { to: "/contact", label: "יצירת קשר" }];
+    { to: "/", label: "בית" },
+    { to: "/students", label: "החניכים שלנו" },
+    { to: "/about", label: "אודות" },
+    { to: "/contact", label: "יצירת קשר" },
+  ];
 
 
   return (
