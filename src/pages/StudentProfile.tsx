@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { students } from "@/data/students";
+import { useStudent } from "@/hooks/useStudents";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +12,21 @@ import { useToast } from "@/hooks/use-toast";
 
 const StudentProfile = () => {
   const { id } = useParams<{ id: string }>();
-  const student = students.find((s) => s.id === id);
+  const { data: student, isLoading } = useStudent(id);
   const { toast } = useToast();
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-xl text-muted-foreground">טוען...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!student) {
     return (
@@ -38,12 +50,6 @@ const StudentProfile = () => {
     toast({ title: "ההודעה נשלחה!", description: `תודה ${formData.name}, נחזור אליך בהקדם.` });
     setFormData({ name: "", email: "", message: "" });
   };
-
-  // Group services by category
-  const servicesByCategory: Record<string, string[]> = {};
-  student.categories.forEach((cat) => {
-    servicesByCategory[cat] = student.services;
-  });
 
   return (
     <div className="min-h-screen flex flex-col">

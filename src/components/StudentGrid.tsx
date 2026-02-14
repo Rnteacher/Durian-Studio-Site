@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { students } from "@/data/students";
+import { useStudents } from "@/hooks/useStudents";
 import StudentCard from "@/components/StudentCard";
 import SearchFilter from "@/components/SearchFilter";
 
 const StudentGrid = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { data: students = [], isLoading } = useStudents();
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) =>
@@ -15,7 +16,6 @@ const StudentGrid = () => {
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
-      // Search filter
       const q = searchQuery.trim().toLowerCase();
       const matchesSearch =
         !q ||
@@ -24,14 +24,13 @@ const StudentGrid = () => {
         student.categories.some((c) => c.toLowerCase().includes(q)) ||
         student.shortDescription.toLowerCase().includes(q);
 
-      // Tag filter
       const matchesTags =
         selectedTags.length === 0 ||
         selectedTags.some((tag) => student.services.includes(tag));
 
       return matchesSearch && matchesTags;
     });
-  }, [searchQuery, selectedTags]);
+  }, [searchQuery, selectedTags, students]);
 
   return (
     <>
@@ -45,7 +44,11 @@ const StudentGrid = () => {
 
       <section className="py-8 pb-20">
         <div className="container mx-auto px-4">
-          {filteredStudents.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-16">
+              <p className="text-xl text-muted-foreground">טוען...</p>
+            </div>
+          ) : filteredStudents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredStudents.map((student) => (
                 <div key={student.id} className="animate-fade-in">
