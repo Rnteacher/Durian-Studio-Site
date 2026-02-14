@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import React from "react";
 
 async function checkAdmin(userId: string): Promise<boolean> {
   try {
@@ -16,7 +17,18 @@ async function checkAdmin(userId: string): Promise<boolean> {
   }
 }
 
-export function useAuth() {
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  isAdmin: boolean;
+  signIn: (email: string, password: string) => ReturnType<typeof supabase.auth.signInWithPassword>;
+  signOut: () => ReturnType<typeof supabase.auth.signOut>;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,12 +37,9 @@ export function useAuth() {
   useEffect(() => {
     let isMounted = true;
 
-    // Safety timeout - if loading doesn't resolve in 5 seconds, force it
+    // Safety timeout
     const timeout = setTimeout(() => {
-      if (isMounted && loading) {
-        console.warn("[useAuth] Timeout - forcing loading to false");
-        setLoading(false);
-      }
+      if (isMounted) setLoading(false);
     }, 5000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -51,12 +60,12 @@ export function useAuth() {
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       if (!isMounted) return;
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      if (currentSession?.user) {
-        const admin = await checkAdmin(currentSession.user.id);
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) {
+        const admin = await checkAdmin(s.user.id);
         if (isMounted) setIsAdmin(admin);
       }
       if (isMounted) setLoading(false);
@@ -71,13 +80,19 @@ export function useAuth() {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
-  };
+  const signIn = (email: string, password: string) =>
+    supabase.auth.signInWithPassword({ email, password });
 
-  const signOut = async () => {
-    return supabase.auth.signOut();
-  };
+  const signOut = () => supabase.auth.signOut();
 
-  return { user, session, loading, isAdmin, signIn, signOut };
+  return React.createElement(AuthContext.Provider, {
+    value: { user, session, loading, isAdmin, signIn, signOut },
+    children,
+  });
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }

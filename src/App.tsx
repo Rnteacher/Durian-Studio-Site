@@ -12,28 +12,31 @@ import ServicePage from "./pages/ServicePage";
 import AdminLogin from "./pages/AdminLogin";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/students" element={<Students />} />
-          <Route path="/student/:id" element={<StudentProfile />} />
-          <Route path="/services/:slug" element={<ServicePage />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/students" element={<Students />} />
+            <Route path="/student/:id" element={<StudentProfile />} />
+            <Route path="/services/:slug" element={<ServicePage />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
