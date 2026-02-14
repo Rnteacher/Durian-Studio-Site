@@ -24,11 +24,11 @@ const Footer = () => {
           </div>
           <div>
             <h4 className="font-rubik font-semibold mb-3">צרו קשר</h4>
-            <p className="text-sm opacity-80">studio.dorian@example.co.il</p>
+            <p className="text-sm opacity-80">studio@chamama.org</p>
           </div>
         </div>
         <div className="border-t border-primary-foreground/20 mt-8 pt-6 text-center text-xs opacity-60">
-          © {new Date().getFullYear()} סטודיו דוריאן. כל הזכויות שמורות.
+          © {new Date().getFullYear()} תיכון החממה. כל הזכויות שמורות.
         </div>
       </div>
     </footer>
