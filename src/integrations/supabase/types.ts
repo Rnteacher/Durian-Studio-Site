@@ -49,6 +49,7 @@ export type Database = {
       }
       services: {
         Row: {
+          category: string
           created_at: string
           id: string
           image: string
@@ -59,6 +60,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string
           created_at?: string
           id?: string
           image?: string
@@ -69,6 +71,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string
           created_at?: string
           id?: string
           image?: string

@@ -24,8 +24,6 @@ interface StudentForm {
   short_description: string;
   long_description: string;
   image: string;
-  categories: string;
-  services: Record<string, string[]>;
   email: string;
   phone: string;
   instagram: string;
@@ -33,13 +31,14 @@ interface StudentForm {
   tiktok: string;
   portfolio_url: string;
   resume_url: string;
+  linkedServiceIds: string[];
 }
 
 const emptyStudentForm: StudentForm = {
   id: "", name: "", short_description: "", long_description: "",
-  image: "/placeholder.svg", categories: "", services: {},
+  image: "/placeholder.svg",
   email: "", phone: "", instagram: "", facebook: "", tiktok: "",
-  portfolio_url: "", resume_url: "",
+  portfolio_url: "", resume_url: "", linkedServiceIds: [],
 };
 
 // ─── Service Form ───
@@ -50,12 +49,13 @@ interface ServiceForm {
   short_description: string;
   long_description: string;
   image: string;
+  category: string;
   linkedStudentIds: string[];
 }
 
 const emptyServiceForm: ServiceForm = {
   id: "", slug: "", title: "", short_description: "", long_description: "",
-  image: "/placeholder.svg", linkedStudentIds: [],
+  image: "/placeholder.svg", category: "", linkedStudentIds: [],
 };
 
 // ─── Image Upload Helper ───
@@ -80,7 +80,7 @@ const Admin = () => {
   const [studentEditOpen, setStudentEditOpen] = useState(false);
   const [studentForm, setStudentForm] = useState<StudentForm>(emptyStudentForm);
   const [isNewStudent, setIsNewStudent] = useState(false);
-  const [newServiceInputs, setNewServiceInputs] = useState<Record<string, string>>({});
+  const [newCategoryInput, setNewCategoryInput] = useState("");
   const [uploadingStudentImage, setUploadingStudentImage] = useState(false);
   const studentImageRef = useRef<HTMLInputElement>(null);
 
@@ -135,47 +135,54 @@ const Admin = () => {
   };
 
   // ─── Student CRUD ───
-  const categoriesList = studentForm.categories.split(",").map(s => s.trim()).filter(Boolean);
+  // Derive unique categories from services
+  const existingCategories = [...new Set((services || []).map(s => s.category).filter(Boolean))];
 
-  const openEditStudent = (student: any) => {
+  const openEditStudent = async (student: any) => {
+    // Get linked service IDs
+    const { data: links } = await supabase.from("service_students").select("service_id").eq("student_id", student.id);
     setStudentForm({
       id: student.id, name: student.name,
       short_description: student.shortDescription, long_description: student.longDescription,
-      image: student.image, categories: student.categories.join(", "),
-      services: student.services,
+      image: student.image,
       email: student.contact.email, phone: student.contact.phone,
       instagram: student.contact.socials?.instagram || "",
       facebook: student.contact.socials?.facebook || "",
       tiktok: student.contact.socials?.tiktok || "",
       portfolio_url: student.portfolioUrl || "",
       resume_url: student.resumeUrl || "",
+      linkedServiceIds: (links || []).map((l: any) => l.service_id),
     });
-    setNewServiceInputs({});
     setIsNewStudent(false);
     setStudentEditOpen(true);
   };
 
-  const openNewStudent = () => { setStudentForm(emptyStudentForm); setNewServiceInputs({}); setIsNewStudent(true); setStudentEditOpen(true); };
+  const openNewStudent = () => { setStudentForm(emptyStudentForm); setIsNewStudent(true); setStudentEditOpen(true); };
 
-  const addStudentService = (category: string) => {
-    const value = (newServiceInputs[category] || "").trim();
-    if (!value) return;
-    setStudentForm(prev => ({ ...prev, services: { ...prev.services, [category]: [...(prev.services[category] || []), value] } }));
-    setNewServiceInputs(prev => ({ ...prev, [category]: "" }));
-  };
-
-  const removeStudentService = (category: string, service: string) => {
-    setStudentForm(prev => ({ ...prev, services: { ...prev.services, [category]: (prev.services[category] || []).filter(s => s !== service) } }));
+  const toggleServiceLink = (serviceId: string) => {
+    setStudentForm(prev => ({
+      ...prev,
+      linkedServiceIds: prev.linkedServiceIds.includes(serviceId)
+        ? prev.linkedServiceIds.filter(id => id !== serviceId)
+        : [...prev.linkedServiceIds, serviceId],
+    }));
   };
 
   const handleSaveStudent = async () => {
-    const cats = categoriesList;
-    const cleanServices: Record<string, string[]> = {};
-    cats.forEach(cat => { if (studentForm.services[cat]?.length) cleanServices[cat] = studentForm.services[cat]; });
+    // Derive categories from linked services
+    const linkedServices = (services || []).filter(s => studentForm.linkedServiceIds.includes(s.id));
+    const cats = [...new Set(linkedServices.map(s => s.category).filter(Boolean))];
+    const svcMap: Record<string, string[]> = {};
+    linkedServices.forEach(s => {
+      if (s.category) {
+        if (!svcMap[s.category]) svcMap[s.category] = [];
+        svcMap[s.category].push(s.title);
+      }
+    });
     const payload = {
       id: studentForm.id, name: studentForm.name,
       short_description: studentForm.short_description, long_description: studentForm.long_description,
-      image: studentForm.image, categories: cats, services: cleanServices,
+      image: studentForm.image, categories: cats, services: svcMap,
       email: studentForm.email, phone: studentForm.phone,
       instagram: studentForm.instagram || null, facebook: studentForm.facebook || null, tiktok: studentForm.tiktok || null,
       portfolio_url: studentForm.portfolio_url || null,
@@ -184,8 +191,22 @@ const Admin = () => {
     const { error } = isNewStudent
       ? await supabase.from("students").insert(payload)
       : await supabase.from("students").update(payload).eq("id", studentForm.id);
-    if (error) { toast({ title: "שגיאה", description: error.message, variant: "destructive" }); }
-    else { toast({ title: isNewStudent ? "חניך נוסף!" : "עודכן בהצלחה!" }); queryClient.invalidateQueries({ queryKey: ["students"] }); setStudentEditOpen(false); }
+    if (error) { toast({ title: "שגיאה", description: error.message, variant: "destructive" }); return; }
+
+    // Update service_students links
+    if (!isNewStudent) {
+      await supabase.from("service_students").delete().eq("student_id", studentForm.id);
+    }
+    if (studentForm.linkedServiceIds.length > 0) {
+      const rows = studentForm.linkedServiceIds.map(sid => ({ service_id: sid, student_id: studentForm.id }));
+      await supabase.from("service_students").insert(rows);
+    }
+
+    toast({ title: isNewStudent ? "חניך נוסף!" : "עודכן בהצלחה!" });
+    queryClient.invalidateQueries({ queryKey: ["students"] });
+    queryClient.invalidateQueries({ queryKey: ["services"] });
+    queryClient.invalidateQueries({ queryKey: ["student-services"] });
+    setStudentEditOpen(false);
   };
 
   const handleDeleteStudent = async (id: string) => {
@@ -201,7 +222,8 @@ const Admin = () => {
     setServiceForm({
       id: service.id, slug: service.slug, title: service.title,
       short_description: service.shortDescription, long_description: service.longDescription,
-      image: service.image, linkedStudentIds: (links || []).map((l: any) => l.student_id),
+      image: service.image, category: service.category || "",
+      linkedStudentIds: (links || []).map((l: any) => l.student_id),
     });
     setIsNewService(false);
     setServiceEditOpen(true);
@@ -222,7 +244,7 @@ const Admin = () => {
     const payload = {
       slug: serviceForm.slug, title: serviceForm.title,
       short_description: serviceForm.short_description, long_description: serviceForm.long_description,
-      image: serviceForm.image,
+      image: serviceForm.image, category: serviceForm.category,
     };
 
     let serviceId = serviceForm.id;
@@ -356,31 +378,42 @@ const Admin = () => {
                 </div>
               </div>
 
-              <Input placeholder="קטגוריות (מופרדות בפסיק)" value={studentForm.categories} onChange={e => setStudentForm({...studentForm, categories: e.target.value})} />
-              
-              {categoriesList.length > 0 && (
-                <div className="space-y-4 border rounded-lg p-3">
-                  <p className="text-sm font-semibold text-heading">שירותים לפי קטגוריה:</p>
-                  {categoriesList.map(cat => (
-                    <div key={cat} className="space-y-2">
+              {/* Service checkboxes grouped by category */}
+              <div className="border rounded-lg p-3 space-y-3">
+                <p className="text-sm font-semibold text-heading">שירותים מקושרים:</p>
+                {existingCategories.map(cat => {
+                  const catServices = (services || []).filter(s => s.category === cat);
+                  if (catServices.length === 0) return null;
+                  return (
+                    <div key={cat} className="space-y-1">
                       <p className="text-sm font-medium text-muted-foreground">{cat}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {(studentForm.services[cat] || []).map(service => (
-                          <Badge key={service} variant="secondary" className="gap-1 cursor-pointer" onClick={() => removeStudentService(cat, service)}>
-                            {service}<X className="h-3 w-3" />
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <Input placeholder="הוסף שירות..." value={newServiceInputs[cat] || ""}
-                          onChange={e => setNewServiceInputs(prev => ({ ...prev, [cat]: e.target.value }))}
-                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addStudentService(cat); } }} className="text-sm" />
-                        <Button type="button" size="sm" variant="outline" onClick={() => addStudentService(cat)}><Plus className="h-3 w-3" /></Button>
-                      </div>
+                      {catServices.map(svc => (
+                        <label key={svc.id} className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50">
+                          <Checkbox
+                            checked={studentForm.linkedServiceIds.includes(svc.id)}
+                            onCheckedChange={() => toggleServiceLink(svc.id)}
+                          />
+                          <span className="text-sm">{svc.title}</span>
+                        </label>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+                {(services || []).filter(s => !s.category).length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">ללא קטגוריה</p>
+                    {(services || []).filter(s => !s.category).map(svc => (
+                      <label key={svc.id} className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50">
+                        <Checkbox
+                          checked={studentForm.linkedServiceIds.includes(svc.id)}
+                          onCheckedChange={() => toggleServiceLink(svc.id)}
+                        />
+                        <span className="text-sm">{svc.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="border rounded-lg p-3 space-y-3">
                 <p className="text-sm font-semibold text-heading">קישורים</p>
@@ -409,6 +442,40 @@ const Admin = () => {
               <Input placeholder="שם השירות" value={serviceForm.title} onChange={e => setServiceForm({...serviceForm, title: e.target.value})} />
               <Input placeholder="תיאור קצר" value={serviceForm.short_description} onChange={e => setServiceForm({...serviceForm, short_description: e.target.value})} />
               <Textarea placeholder="תיאור מלא" value={serviceForm.long_description} onChange={e => setServiceForm({...serviceForm, long_description: e.target.value})} rows={4} />
+
+              {/* Category */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-heading">קטגוריה</label>
+                <div className="flex gap-2">
+                  <select
+                    value={serviceForm.category}
+                    onChange={e => {
+                      if (e.target.value === "__new__") {
+                        setNewCategoryInput("");
+                      } else {
+                        setServiceForm({...serviceForm, category: e.target.value});
+                      }
+                    }}
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">בחר קטגוריה...</option>
+                    {existingCategories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                    <option value="__new__">+ קטגוריה חדשה</option>
+                  </select>
+                </div>
+                {(serviceForm.category === "__new__" || (!existingCategories.includes(serviceForm.category) && serviceForm.category !== "")) && (
+                  <Input
+                    placeholder="שם הקטגוריה החדשה"
+                    value={serviceForm.category === "__new__" ? newCategoryInput : serviceForm.category}
+                    onChange={e => {
+                      setNewCategoryInput(e.target.value);
+                      setServiceForm({...serviceForm, category: e.target.value});
+                    }}
+                  />
+                )}
+              </div>
               
               {/* Image upload */}
               <div className="space-y-2">
