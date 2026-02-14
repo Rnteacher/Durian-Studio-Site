@@ -81,6 +81,7 @@ const Admin = () => {
   const [studentForm, setStudentForm] = useState<StudentForm>(emptyStudentForm);
   const [isNewStudent, setIsNewStudent] = useState(false);
   const [newCategoryInput, setNewCategoryInput] = useState("");
+  const [isCreatingNewCategory, setIsCreatingNewCategory] = useState(false);
   const [uploadingStudentImage, setUploadingStudentImage] = useState(false);
   const studentImageRef = useRef<HTMLInputElement>(null);
 
@@ -229,7 +230,7 @@ const Admin = () => {
     setServiceEditOpen(true);
   };
 
-  const openNewService = () => { setServiceForm(emptyServiceForm); setIsNewService(true); setServiceEditOpen(true); };
+  const openNewService = () => { setServiceForm(emptyServiceForm); setIsNewService(true); setIsCreatingNewCategory(false); setServiceEditOpen(true); };
 
   const toggleStudentLink = (studentId: string) => {
     setServiceForm(prev => ({
@@ -446,33 +447,35 @@ const Admin = () => {
               {/* Category */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-heading">קטגוריה</label>
-                <div className="flex gap-2">
-                  <select
-                    value={serviceForm.category}
-                    onChange={e => {
-                      if (e.target.value === "__new__") {
-                        setNewCategoryInput("");
-                      } else {
-                        setServiceForm({...serviceForm, category: e.target.value});
-                      }
-                    }}
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">בחר קטגוריה...</option>
-                    {existingCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                    <option value="__new__">+ קטגוריה חדשה</option>
-                  </select>
-                </div>
-                {(serviceForm.category === "__new__" || (!existingCategories.includes(serviceForm.category) && serviceForm.category !== "")) && (
+                <select
+                  value={isCreatingNewCategory ? "__new__" : serviceForm.category}
+                  onChange={e => {
+                    if (e.target.value === "__new__") {
+                      setIsCreatingNewCategory(true);
+                      setNewCategoryInput("");
+                      setServiceForm({...serviceForm, category: ""});
+                    } else {
+                      setIsCreatingNewCategory(false);
+                      setServiceForm({...serviceForm, category: e.target.value});
+                    }
+                  }}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">בחר קטגוריה...</option>
+                  {existingCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="__new__">+ קטגוריה חדשה</option>
+                </select>
+                {isCreatingNewCategory && (
                   <Input
                     placeholder="שם הקטגוריה החדשה"
-                    value={serviceForm.category === "__new__" ? newCategoryInput : serviceForm.category}
+                    value={newCategoryInput}
                     onChange={e => {
                       setNewCategoryInput(e.target.value);
                       setServiceForm({...serviceForm, category: e.target.value});
                     }}
+                    autoFocus
                   />
                 )}
               </div>
