@@ -2,13 +2,15 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Student } from "@/hooks/useStudents";
-import { getAllServices } from "@/hooks/useStudents";
+import { useStudentServices } from "@/hooks/useServices";
 
 interface StudentCardProps {
   student: Student;
 }
 
 const StudentCard = ({ student }: StudentCardProps) => {
+  const { data: linkedServices = [] } = useStudentServices(student.id);
+
   return (
     <Link to={`/student/${student.id}`}>
       <Card className="group hover-scale cursor-pointer overflow-hidden border-border bg-card shadow-sm hover:shadow-lg transition-shadow duration-300">
@@ -28,13 +30,13 @@ const StudentCard = ({ student }: StudentCardProps) => {
             {student.shortDescription}
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {getAllServices(student.services).slice(0, 3).map((service) => (
+            {linkedServices.slice(0, 3).map((service) => (
               <Badge
-                key={service}
+                key={service.id}
                 variant="secondary"
                 className="text-xs bg-tag text-foreground"
               >
-                {service}
+                {service.title}
               </Badge>
             ))}
           </div>

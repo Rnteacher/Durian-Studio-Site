@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { categories } from "@/data/categories";
+import { useServices } from "@/hooks/useServices";
 
 interface SearchFilterProps {
   searchQuery: string;
@@ -20,6 +20,17 @@ const SearchFilter = ({
   onClearFilters,
 }: SearchFilterProps) => {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const { data: services = [] } = useServices();
+
+  // Derive categories from services
+  const categoryMap = new Map<string, { title: string; id: string }[]>();
+  services.forEach((s) => {
+    const cat = s.category || "ללא קטגוריה";
+    if (!categoryMap.has(cat)) categoryMap.set(cat, []);
+    categoryMap.get(cat)!.push({ title: s.title, id: s.id });
+  });
+
+  const categoryNames = [...categoryMap.keys()];
 
   return (
     <section className="py-10">
@@ -36,43 +47,42 @@ const SearchFilter = ({
         </div>
 
         {/* Main Categories */}
-        <div className="flex flex-wrap justify-center gap-2 mb-4">
-          {categories.map((cat) => (
-            <button
-              key={cat.name}
-              onClick={() =>
-                setExpandedCategory(expandedCategory === cat.name ? null : cat.name)
-              }
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                expandedCategory === cat.name
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-tag text-foreground hover:bg-primary/10"
-              }`}
-            >
-              <span className="ml-1">{cat.icon}</span>
-              {cat.name}
-            </button>
-          ))}
-        </div>
+        {categoryNames.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
+            {categoryNames.map((cat) => (
+              <button
+                key={cat}
+                onClick={() =>
+                  setExpandedCategory(expandedCategory === cat ? null : cat)
+                }
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  expandedCategory === cat
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-tag text-foreground hover:bg-primary/10"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* Sub Tags */}
-        {expandedCategory && (
+        {/* Sub Tags (services in category) */}
+        {expandedCategory && categoryMap.has(expandedCategory) && (
           <div className="flex flex-wrap justify-center gap-2 mb-4 animate-fade-in">
-            {categories
-              .find((c) => c.name === expandedCategory)
-              ?.subTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => onTagToggle(tag)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedTags.includes(tag)
-                      ? "bg-heading text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
+            {categoryMap.get(expandedCategory)!.map((svc) => (
+              <button
+                key={svc.id}
+                onClick={() => onTagToggle(svc.title)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  selectedTags.includes(svc.title)
+                    ? "bg-heading text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                }`}
+              >
+                {svc.title}
+              </button>
+            ))}
           </div>
         )}
 

@@ -8,6 +8,7 @@ export interface Service {
   shortDescription: string;
   longDescription: string;
   image: string;
+  category: string;
 }
 
 export interface ServiceWithStudents extends Service {
@@ -22,6 +23,7 @@ function mapRow(row: any): Service {
     shortDescription: row.short_description,
     longDescription: row.long_description,
     image: row.image,
+    category: row.category || "",
   };
 }
 

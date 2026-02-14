@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { useStudents, getAllServices } from "@/hooks/useStudents";
+import { useStudents } from "@/hooks/useStudents";
+import { useServices } from "@/hooks/useServices";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StudentCard from "@/components/StudentCard";
@@ -9,6 +12,15 @@ const Students = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { data: students = [], isLoading } = useStudents();
+  const { data: services = [] } = useServices();
+
+  const { data: allLinks = [] } = useQuery({
+    queryKey: ["all-service-student-links"],
+    queryFn: async () => {
+      const { data } = await supabase.from("service_students").select("service_id, student_id");
+      return data || [];
+    },
+  });
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) =>
@@ -19,21 +31,24 @@ const Students = () => {
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       const q = searchQuery.trim().toLowerCase();
-      const allServices = getAllServices(student.services);
+      const studentServiceIds = allLinks.filter(l => l.student_id === student.id).map(l => l.service_id);
+      const studentServiceTitles = services.filter(s => studentServiceIds.includes(s.id)).map(s => s.title);
+      const studentCategories = [...new Set(services.filter(s => studentServiceIds.includes(s.id)).map(s => s.category).filter(Boolean))];
+
       const matchesSearch =
         !q ||
         student.name.toLowerCase().includes(q) ||
-        allServices.some((s) => s.toLowerCase().includes(q)) ||
-        student.categories.some((c) => c.toLowerCase().includes(q)) ||
+        studentServiceTitles.some((s) => s.toLowerCase().includes(q)) ||
+        studentCategories.some((c) => c.toLowerCase().includes(q)) ||
         student.shortDescription.toLowerCase().includes(q);
 
       const matchesTags =
         selectedTags.length === 0 ||
-        selectedTags.some((tag) => allServices.includes(tag));
+        selectedTags.some((tag) => studentServiceTitles.includes(tag));
 
       return matchesSearch && matchesTags;
     });
-  }, [searchQuery, selectedTags, students]);
+  }, [searchQuery, selectedTags, students, services, allLinks]);
 
   return (
     <div className="min-h-screen flex flex-col">
