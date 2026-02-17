@@ -1,7 +1,11 @@
+"use client";
+
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { createClientSupabaseClient } from "@/lib/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import React from "react";
+
+const supabase = createClientSupabaseClient();
 
 async function checkAdmin(userId: string): Promise<boolean> {
   try {

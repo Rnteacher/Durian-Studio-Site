@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Palette, Music, Camera, Wrench } from "lucide-react";
 
@@ -38,12 +38,12 @@ const HeroSection = () => {
             <a href="#services">גלו את השירותים שלנו</a>
           </Button>
           <Button asChild variant="outline" size="lg" className="text-lg px-8 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-            <Link to="/students">החניכים שלנו</Link>
+            <Link href="/students">החניכים שלנו</Link>
           </Button>
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 };
 
 export default HeroSection;

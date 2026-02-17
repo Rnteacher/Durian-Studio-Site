@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Student } from "@/hooks/useStudents";
@@ -12,7 +14,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
   const { data: linkedServices = [] } = useStudentServices(student.id);
 
   return (
-    <Link to={`/student/${student.id}`}>
+    <Link href={`/student/${student.id}`}>
       <Card className="group hover-scale cursor-pointer overflow-hidden border-border bg-card shadow-sm hover:shadow-lg transition-shadow duration-300">
         <div className="aspect-square bg-soft-bg flex items-center justify-center overflow-hidden">
           <img

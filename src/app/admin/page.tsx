@@ -1,13 +1,13 @@
+"use client";
+
 import { useState, useRef } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudents } from "@/hooks/useStudents";
 import { useServices } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,12 +68,12 @@ async function uploadImage(file: File, folder: string): Promise<string | null> {
   return data.publicUrl;
 }
 
-const Admin = () => {
+export default function Admin() {
   const { user, loading: authLoading, isAdmin, signOut } = useAuth();
   const { data: students, isLoading: studentsLoading } = useStudents();
   const { data: services, isLoading: servicesLoading } = useServices();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
 
   // Student state
@@ -93,18 +93,14 @@ const Admin = () => {
   const serviceImageRef = useRef<HTMLInputElement>(null);
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center">טוען...</div>;
-  if (!user) return <Navigate to="/admin/login" replace />;
+  if (!user) { router.replace("/admin/login"); return null; }
   if (!isAdmin) return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 flex items-center justify-center">
-        <p className="text-xl text-muted-foreground">אין לך הרשאות מנהל</p>
-      </main>
-      <Footer />
-    </div>
+    <main className="flex-1 flex items-center justify-center">
+      <p className="text-xl text-muted-foreground">אין לך הרשאות מנהל</p>
+    </main>
   );
 
-  const handleLogout = async () => { await signOut(); navigate("/"); };
+  const handleLogout = async () => { await signOut(); router.push("/"); };
 
   // ─── Image Upload Handlers ───
   const handleStudentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,103 +275,100 @@ const Admin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-rubik text-3xl font-bold text-heading">ניהול</h1>
-          <Button variant="outline" onClick={handleLogout} className="gap-1"><LogOut className="h-4 w-4" />יציאה</Button>
-        </div>
+    <main className="flex-1 container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="font-rubik text-3xl font-bold text-heading">ניהול</h1>
+        <Button variant="outline" onClick={handleLogout} className="gap-1"><LogOut className="h-4 w-4" />יציאה</Button>
+      </div>
 
-        <Tabs defaultValue="services" dir="rtl">
-          <TabsList className="mb-6">
-            <TabsTrigger value="services">שירותים</TabsTrigger>
-            <TabsTrigger value="students">חניכים</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="services" dir="rtl">
+        <TabsList className="mb-6">
+          <TabsTrigger value="services">שירותים</TabsTrigger>
+          <TabsTrigger value="students">חניכים</TabsTrigger>
+        </TabsList>
 
-          {/* ─── Services Tab ─── */}
-          <TabsContent value="services">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-rubik text-xl font-semibold text-heading">שירותים</h2>
-              <Button onClick={openNewService} className="gap-1"><Plus className="h-4 w-4" />שירות חדש</Button>
+        {/* ─── Services Tab ─── */}
+        <TabsContent value="services">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-rubik text-xl font-semibold text-heading">שירותים</h2>
+            <Button onClick={openNewService} className="gap-1"><Plus className="h-4 w-4" />שירות חדש</Button>
+          </div>
+          {servicesLoading ? <p>טוען...</p> : (
+            <div className="grid gap-3">
+              {services?.map((s) => (
+                <div key={s.id} className="flex items-center gap-4 bg-card rounded-xl p-4 shadow-sm">
+                  <img src={s.image} alt={s.title} className="w-16 h-10 rounded-lg object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-heading">{s.title}</p>
+                    <p className="text-sm text-muted-foreground truncate">{s.shortDescription}</p>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">{s.slug}</Badge>
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="icon" variant="ghost" onClick={() => openEditService(s)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteService(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                </div>
+              ))}
             </div>
-            {servicesLoading ? <p>טוען...</p> : (
-              <div className="grid gap-3">
-                {services?.map((s) => (
-                  <div key={s.id} className="flex items-center gap-4 bg-card rounded-xl p-4 shadow-sm">
-                    <img src={s.image} alt={s.title} className="w-16 h-10 rounded-lg object-cover" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-heading">{s.title}</p>
-                      <p className="text-sm text-muted-foreground truncate">{s.shortDescription}</p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">{s.slug}</Badge>
-                    <div className="flex gap-1 shrink-0">
-                      <Button size="icon" variant="ghost" onClick={() => openEditService(s)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleDeleteService(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
+          )}
+        </TabsContent>
 
-          {/* ─── Students Tab ─── */}
-          <TabsContent value="students">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-rubik text-xl font-semibold text-heading">חניכים</h2>
-              <Button onClick={openNewStudent} className="gap-1"><Plus className="h-4 w-4" />חניך חדש</Button>
+        {/* ─── Students Tab ─── */}
+        <TabsContent value="students">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-rubik text-xl font-semibold text-heading">חניכים</h2>
+            <Button onClick={openNewStudent} className="gap-1"><Plus className="h-4 w-4" />חניך חדש</Button>
+          </div>
+          {studentsLoading ? <p>טוען...</p> : (
+            <div className="grid gap-3">
+              {students?.map((s) => (
+                <div key={s.id} className="flex items-center gap-4 bg-card rounded-xl p-4 shadow-sm">
+                  <img src={s.image} alt={s.name} className="w-12 h-12 rounded-full object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-heading">{s.name}</p>
+                    <p className="text-sm text-muted-foreground truncate">{s.shortDescription}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    {s.categories.map(c => <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>)}
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="icon" variant="ghost" onClick={() => openEditStudent(s)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteStudent(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                </div>
+              ))}
             </div>
-            {studentsLoading ? <p>טוען...</p> : (
-              <div className="grid gap-3">
-                {students?.map((s) => (
-                  <div key={s.id} className="flex items-center gap-4 bg-card rounded-xl p-4 shadow-sm">
-                    <img src={s.image} alt={s.name} className="w-12 h-12 rounded-full object-cover" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-heading">{s.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{s.shortDescription}</p>
-                    </div>
-                    <div className="flex gap-1">
-                      {s.categories.map(c => <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>)}
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button size="icon" variant="ghost" onClick={() => openEditStudent(s)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleDeleteStudent(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          )}
+        </TabsContent>
+      </Tabs>
 
-        {/* ─── Student Edit Dialog ─── */}
-        <Dialog open={studentEditOpen} onOpenChange={setStudentEditOpen}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{isNewStudent ? "הוספת חניך" : "עריכת חניך"}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 mt-4">
-              {isNewStudent && (
-                <Input placeholder="מזהה (אנגלית)" value={studentForm.id} onChange={e => setStudentForm({...studentForm, id: e.target.value})} dir="ltr" />
-              )}
-              <Input placeholder="שם" value={studentForm.name} onChange={e => setStudentForm({...studentForm, name: e.target.value})} />
-              <Input placeholder="תיאור קצר" value={studentForm.short_description} onChange={e => setStudentForm({...studentForm, short_description: e.target.value})} />
-              <Textarea placeholder="ביוגרפיה / תיאור מלא" value={studentForm.long_description} onChange={e => setStudentForm({...studentForm, long_description: e.target.value})} rows={4} />
-              
-              {/* Image upload */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-heading">תמונה</label>
-                <div className="flex items-center gap-3">
-                  {studentForm.image && studentForm.image !== "/placeholder.svg" && (
-                    <img src={studentForm.image} alt="תצוגה מקדימה" className="w-16 h-16 rounded-lg object-cover" />
-                  )}
-                  <div className="flex-1 flex gap-2">
-                    <Input placeholder="קישור תמונה" value={studentForm.image} onChange={e => setStudentForm({...studentForm, image: e.target.value})} dir="ltr" className="flex-1" />
-                    <input type="file" accept="image/*" ref={studentImageRef} className="hidden" onChange={handleStudentImageUpload} />
-                    <Button type="button" variant="outline" size="icon" onClick={() => studentImageRef.current?.click()} disabled={uploadingStudentImage}>
-                      {uploadingStudentImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    </Button>
-                  </div>
+      {/* ─── Student Edit Dialog ─── */}
+      <Dialog open={studentEditOpen} onOpenChange={setStudentEditOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{isNewStudent ? "הוספת חניך" : "עריכת חניך"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {isNewStudent && (
+              <Input placeholder="מזהה (אנגלית)" value={studentForm.id} onChange={e => setStudentForm({...studentForm, id: e.target.value})} dir="ltr" />
+            )}
+            <Input placeholder="שם" value={studentForm.name} onChange={e => setStudentForm({...studentForm, name: e.target.value})} />
+            <Input placeholder="תיאור קצר" value={studentForm.short_description} onChange={e => setStudentForm({...studentForm, short_description: e.target.value})} />
+            <Textarea placeholder="ביוגרפיה / תיאור מלא" value={studentForm.long_description} onChange={e => setStudentForm({...studentForm, long_description: e.target.value})} rows={4} />
+            
+            {/* Image upload */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-heading">תמונה</label>
+              <div className="flex items-center gap-3">
+                {studentForm.image && studentForm.image !== "/placeholder.svg" && (
+                  <img src={studentForm.image} alt="תצוגה מקדימה" className="w-16 h-16 rounded-lg object-cover" />
+                )}
+                <div className="flex-1 flex gap-2">
+                  <Input placeholder="קישור תמונה" value={studentForm.image} onChange={e => setStudentForm({...studentForm, image: e.target.value})} dir="ltr" className="flex-1" />
+                  <input type="file" accept="image/*" ref={studentImageRef} className="hidden" onChange={handleStudentImageUpload} />
+                  <Button type="button" variant="outline" size="icon" onClick={() => studentImageRef.current?.click()} disabled={uploadingStudentImage}>
+                    {uploadingStudentImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
 
@@ -437,7 +430,7 @@ const Admin = () => {
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{isNewService ? "הוספת שירות" : "עריכת שירות"}</DialogTitle>
-            </DialogHeader>
+          </DialogHeader>
             <div className="space-y-3 mt-4">
               <Input placeholder="Slug (אנגלית, לדוגמה: video-editing)" value={serviceForm.slug} onChange={e => setServiceForm({...serviceForm, slug: e.target.value})} dir="ltr" />
               <Input placeholder="שם השירות" value={serviceForm.title} onChange={e => setServiceForm({...serviceForm, title: e.target.value})} />
@@ -519,9 +512,6 @@ const Admin = () => {
           </DialogContent>
         </Dialog>
       </main>
-      <Footer />
     </div>
   );
-};
-
-export default Admin;
+}

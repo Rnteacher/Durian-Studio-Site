@@ -1,5 +1,9 @@
+"use client";
+
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { createClientSupabaseClient } from "@/lib/supabase/client";
+
+const supabase = createClientSupabaseClient();
 
 export interface Service {
   id: string;

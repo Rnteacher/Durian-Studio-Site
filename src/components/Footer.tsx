@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const Footer = () => {
   return (
@@ -16,10 +16,10 @@ const Footer = () => {
           <div>
             <h4 className="font-rubik font-semibold mb-3">ניווט</h4>
             <div className="flex flex-col gap-2 text-sm opacity-80">
-              <Link to="/" className="hover:opacity-100 transition-opacity">בית</Link>
-              <Link to="/students" className="hover:opacity-100 transition-opacity">החניכים שלנו</Link>
-              <Link to="/about" className="hover:opacity-100 transition-opacity">אודות</Link>
-              <Link to="/contact" className="hover:opacity-100 transition-opacity">יצירת קשר</Link>
+              <Link href="/" className="hover:opacity-100 transition-opacity">בית</Link>
+              <Link href="/students" className="hover:opacity-100 transition-opacity">החניכים שלנו</Link>
+              <Link href="/about" className="hover:opacity-100 transition-opacity">אודות</Link>
+              <Link href="/contact" className="hover:opacity-100 transition-opacity">יצירת קשר</Link>
             </div>
           </div>
           <div>

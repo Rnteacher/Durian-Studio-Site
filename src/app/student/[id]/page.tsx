@@ -1,0 +1,175 @@
+"use client";
+
+import Link from "next/link";
+import { useStudent } from "@/hooks/useStudents";
+import { useStudentServices } from "@/hooks/useServices";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Mail, Phone, ArrowRight, ExternalLink, FileText } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+
+export default function StudentProfile({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const { data: student, isLoading } = useStudent(id);
+  const { data: linkedServices = [] } = useStudentServices(id);
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+
+  if (isLoading) {
+    return (
+      <main className="flex-1 flex items-center justify-center">
+        <p className="text-xl text-muted-foreground">טוען...</p>
+      </main>
+    );
+  }
+
+  if (!student) {
+    return (
+      <main className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="font-rubik text-3xl font-bold text-heading mb-4">לא נמצא 😕</h1>
+          <Button asChild>
+            <Link href="/">חזרה לדף הבית</Link>
+          </Button>
+        </div>
+      </main>
+    );
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({ title: "ההודעה נשלחה!", description: `תודה ${formData.name}, נחזור אליך בהקדם.` });
+    setFormData({ name: "", email: "", message: "" });
+  };
+
+  return (
+    <main className="flex-1">
+      {/* Back link */}
+      <div className="container mx-auto px-4 pt-6">
+        <Link href="/students" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+          <ArrowRight className="h-4 w-4" />
+          חזרה לכל החניכים
+        </Link>
+      </div>
+
+      {/* Hero */}
+      <section className="py-10">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="w-full md:w-80 h-80 rounded-2xl overflow-hidden bg-soft-bg shrink-0">
+              <img src={student.image} alt={student.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1">
+              <h1 className="font-rubik text-4xl md:text-5xl font-extrabold text-heading mb-3">
+                {student.name}
+              </h1>
+              <p className="text-lg text-muted-foreground mb-4">{student.shortDescription}</p>
+              {linkedServices.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {linkedServices.map((svc) => (
+                    <Link key={svc.id} href={`/services/${svc.slug}`}>
+                      <Badge variant="default" className="cursor-pointer text-sm px-3 py-1 bg-primary text-primary-foreground hover:bg-heading">
+                        {svc.title}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-3 mb-4">
+                {student.portfolioUrl && (
+                  <a href={student.portfolioUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <ExternalLink className="h-4 w-4" />תיק עבודות
+                    </Button>
+                  </a>
+                )}
+                {student.resumeUrl && (
+                  <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <FileText className="h-4 w-4" />רזומה
+                    </Button>
+                  </a>
+                )}
+              </div>
+              <p className="text-base leading-relaxed text-foreground">{student.longDescription}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services */}
+      <section className="py-12 bg-soft-bg/40">
+        <div className="container mx-auto px-4">
+          <h2 className="font-rubik text-2xl font-bold text-heading mb-6">שירותים</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {student.categories.map((cat) => (
+              <div key={cat} className="bg-card rounded-xl p-5 shadow-sm">
+                <h3 className="font-rubik font-semibold text-heading mb-3">{cat}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {(student.services[cat] || []).map((service) => (
+                    <Badge key={service} variant="secondary" className="bg-tag text-foreground">
+                      {service}
+                    </Badge>
+                  ))}
+                  {(!student.services[cat] || student.services[cat].length === 0) && (
+                    <span className="text-sm text-muted-foreground">אין שירותים בקטגוריה זו</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section className="py-12">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <h2 className="font-rubik text-2xl font-bold text-heading mb-6">יצירת קשר</h2>
+
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="flex items-center gap-2 bg-card rounded-xl p-4 shadow-sm flex-1">
+              <Mail className="h-5 w-5 text-primary" />
+              <span className="text-sm">{student.contact.email}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-card rounded-xl p-4 shadow-sm flex-1">
+              <Phone className="h-5 w-5 text-primary" />
+              <span className="text-sm">{student.contact.phone}</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              placeholder="שם מלא"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              className="bg-card"
+            />
+            <Input
+              type="email"
+              placeholder="אימייל"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              className="bg-card"
+            />
+            <Textarea
+              placeholder="הודעה"
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              required
+              rows={4}
+              className="bg-card"
+            />
+            <Button type="submit" className="w-full bg-primary hover:bg-heading">
+              שליחה
+            </Button>
+          </form>
+        </div>
+      </section>
+    </main>
+  );
+}

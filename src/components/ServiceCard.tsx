@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -27,7 +27,7 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
           {service.shortDescription}
         </p>
         <Button asChild className="w-full bg-primary hover:bg-heading gap-2">
-          <Link to={`/services/${service.slug}`}>
+          <Link href={`/services/${service.slug}`}>
             לפרטים
             <ArrowLeft className="h-4 w-4" />
           </Link>

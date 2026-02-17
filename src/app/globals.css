@@ -1,9 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Merriweather&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -119,24 +113,73 @@
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 240 5% 10%;
+      --foreground: 0 0% 98%;
+      --card: 240 3% 15%;
+      --card-foreground: 0 0% 98%;
+      --popover: 240 5% 26%;
+      --popover-foreground: 0 0% 98%;
+      --primary: 328 85% 70%;
+      --primary-foreground: 336 83% 17%;
+      --secondary: 240 3% 46%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3% 46%;
+      --muted-foreground: 0 0% 98%;
+      --accent: 343 87% 15%;
+      --accent-foreground: 351 94% 71%;
+      --destructive: 0 84% 60%;
+      --destructive-foreground: 0 85% 97%;
+      --border: 240 5% 33%;
+      --input: 240 5% 33%;
+      --ring: 328 85% 70%;
+      --heading: 34 100% 90%;
+      --tag: 34 50% 30%;
+      --soft-bg: 87 20% 20%;
+      --sidebar-background: 320 30% 10%;
+      --sidebar-foreground: 0 0% 98%;
+      --sidebar-primary: 328 85% 70%;
+      --sidebar-primary-foreground: 336 83% 17%;
+      --sidebar-accent: 351 94% 71%;
+      --sidebar-accent-foreground: 343 87% 15%;
+      --sidebar-border: 240 5% 33%;
+      --sidebar-ring: 328 85% 70%;
+      --chart-1: 327 87% 81%;
+      --chart-2: 352 95% 81%;
+      --chart-3: 328 85% 70%;
+      --chart-4: 351 94% 71%;
+      --chart-5: 240 5% 33%;
+      --sidebar: 240 3% 15%;
+      --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+      --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+      --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+      --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+      --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+      --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+      --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+      --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    }
   }
 
-  body {
-    @apply bg-background text-foreground font-heebo;
+  @layer base {
+    * {
+      @apply border-border;
+    }
+
+    body {
+      @apply bg-background text-foreground font-heebo;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Rubik', sans-serif;
+    }
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Rubik', sans-serif;
-  }
-}
-
-@layer utilities {
-  .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105;
+  @layer utilities {
+    .hover-scale {
+      @apply transition-transform duration-200 hover:scale-105;
+    }
   }
 }
