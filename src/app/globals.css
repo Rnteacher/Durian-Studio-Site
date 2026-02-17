@@ -169,7 +169,9 @@
     }
 
     body {
-      @apply bg-background text-foreground font-heebo;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      @apply font-heebo;
     }
 
     h1, h2, h3, h4, h5, h6 {

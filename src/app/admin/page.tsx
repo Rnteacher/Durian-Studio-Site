@@ -576,16 +576,17 @@ export default function Admin() {
                   {isNewStudent ? "הוסף" : "שמור"}
                 </Button>
               </div>
-            </DialogContent>
-          </Dialog>
-  
-          {/* ─── Service Edit Dialog ─── */}
-          <Dialog open={serviceEditOpen} onOpenChange={setServiceEditOpen}>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{isNewService ? "הוספת שירות" : "עריכת שירות"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3 mt-4">
+                      </DialogContent>
+                    </Dialog>
+                  )}
+              
+                  {/* ─── Service Edit Dialog ─── */}
+                  {serviceEditOpen && (
+                    <Dialog open={serviceEditOpen} onOpenChange={setServiceEditOpen}>
+                      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>{isNewService ? "הוספת שירות" : "עריכת שירות"}</DialogTitle>
+                        </DialogHeader>              <div className="space-y-3 mt-4">
                 <Input
                   placeholder="Slug (אנגלית, לדוגמה: video-editing)"
                   value={serviceForm.slug}
