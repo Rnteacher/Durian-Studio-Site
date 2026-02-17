@@ -3,6 +3,7 @@
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
 import { createClientSupabaseClient } from "@/lib/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+
 import React from "react";
 
 const supabase = createClientSupabaseClient();
