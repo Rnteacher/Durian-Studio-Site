@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
+import { useState, useEffect, createContext, useContext, useMemo, type ReactNode } from "react";
 import { createClientSupabaseClient } from "@/lib/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import type { User, Session, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 import React from "react";
 
-const supabase = createClientSupabaseClient();
-
-async function checkAdmin(userId: string): Promise<boolean> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function checkAdmin(supabase: any, userId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.rpc("has_role", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc("has_role", {
       _user_id: userId,
       _role: "admin",
     });
@@ -30,13 +31,14 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
-  signIn: (email: string, password: string) => ReturnType<typeof supabase.auth.signInWithPassword>;
-  signOut: () => ReturnType<typeof supabase.auth.signOut>;
+  signIn: (email: string, password: string) => ReturnType<SupabaseClient<Database>["auth"]["signInWithPassword"]>;
+  signOut: () => ReturnType<SupabaseClient<Database>["auth"]["signOut"]>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const supabase = useMemo(() => createClientSupabaseClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,10 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return;
         }
-        // Defer admin check so the client has updated its auth headers
         setTimeout(async () => {
           if (!isMounted) return;
-          const admin = await checkAdmin(newSession.user.id);
+          const admin = await checkAdmin(supabase, newSession.user.id);
           if (isMounted) {
             setIsAdmin(admin);
             setLoading(false);
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        const admin = await checkAdmin(s.user.id);
+        const admin = await checkAdmin(supabase, s.user.id);
         if (isMounted) setIsAdmin(admin);
       }
       if (isMounted) setLoading(false);
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(timeout);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const signIn = (email: string, password: string) =>
     supabase.auth.signInWithPassword({ email, password });

@@ -57,12 +57,15 @@ export function useServiceBySlug(slug: string | undefined) {
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const serviceData = data as any;
 
       // Get linked students
-      const { data: links } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: links } = await (supabase as any)
         .from("service_students")
         .select("student_id")
-        .eq("service_id", data.id);
+        .eq("service_id", serviceData.id);
 
       const studentIds = (links || []).map((l: any) => l.student_id);
       let students: any[] = [];
@@ -79,7 +82,7 @@ export function useServiceBySlug(slug: string | undefined) {
         }));
       }
 
-      return { ...mapRow(data), students } as ServiceWithStudents;
+      return { ...mapRow(serviceData), students } as ServiceWithStudents;
     },
   });
 }

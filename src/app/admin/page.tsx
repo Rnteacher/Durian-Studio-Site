@@ -38,7 +38,7 @@ const emptyStudentForm: StudentForm = {
   id: "", name: "", short_description: "", long_description: "",
   image: "/placeholder.svg",
   email: "", phone: "", instagram: "", facebook: "", tiktok: "",
-  portfolio_url: "", resume_url: [],
+  portfolio_url: "", resume_url: "", linkedServiceIds: [],
 };
 
 // ─── Service Form ───
@@ -558,5 +558,6 @@ export default function Admin() {
           </DialogContent>
         </Dialog>
       )}
-      )
+    </>
+  );
 }
