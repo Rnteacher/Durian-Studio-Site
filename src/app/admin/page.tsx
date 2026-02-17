@@ -400,185 +400,186 @@ export default function Admin() {
       {/* ─── Student Edit Dialog ─── */}
       {studentEditOpen && (
         <Dialog open={studentEditOpen} onOpenChange={setStudentEditOpen}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{isNewStudent ? "הוספת חניך" : "עריכת חניך"}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 mt-4">
-              {isNewStudent && (
-                <Input
-                  placeholder="מזהה (אנגלית)"
-                  value={studentForm.id}
-                  onChange={(e) => setStudentForm({ ...studentForm, id: e.target.value })}
-                  dir="ltr"
-                />
-              )}
-              <Input
-                placeholder="שם"
-                value={studentForm.name}
-                onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
-              />
-              <Input
-                placeholder="תיאור קצר"
-                value={studentForm.short_description}
-                onChange={(e) =>
-                  setStudentForm({ ...studentForm, short_description: e.target.value })
-                }
-              />
-              <Textarea
-                placeholder="ביוגרפיה / תיאור מלא"
-                value={studentForm.long_description}
-                onChange={(e) =>
-                  setStudentForm({ ...studentForm, long_description: e.target.value })
-                }
-                rows={4}
-              />
-
-              {/* Image upload */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-heading">תמונה</label>
-                <div className="flex items-center gap-3">
-                  {studentForm.image && studentForm.image !== "/placeholder.svg" && (
-                    <img
-                      src={studentForm.image}
-                      alt="תצוגה מקדימה"
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                  )}
-                  <div className="flex-1 flex gap-2">
-                    <Input
-                      placeholder="קישור תמונה"
-                      value={studentForm.image}
-                      onChange={(e) => setStudentForm({ ...studentForm, image: e.target.value })}
-                      dir="ltr"
-                      className="flex-1"
-                    />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      ref={studentImageRef}
-                      className="hidden"
-                      onChange={handleStudentImageUpload}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => studentImageRef.current?.click()}
-                      disabled={uploadingStudentImage}
-                    >
-                      {uploadingStudentImage ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Upload className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Service checkboxes grouped by category */}
-                <div className="border rounded-lg p-3 space-y-3">
-                  <p className="text-sm font-semibold text-heading">שירותים מקושרים:</p>
-                  {existingCategories.map((cat) => {
-                    const catServices = (services || []).filter((s) => s.category === cat);
-                    if (catServices.length === 0) return null;
-                    return (
-                      <div key={cat} className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">{cat}</p>
-                        {catServices.map((svc) => (
-                          <label
-                            key={svc.id}
-                            className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
-                          >
-                            <Checkbox
-                              checked={studentForm.linkedServiceIds.includes(svc.id)}
-                              onCheckedChange={() => toggleServiceLink(svc.id)}
+                    <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                      <>
+                        <DialogHeader>
+                          <DialogTitle>{isNewStudent ? "הוספת חניך" : "עריכת חניך"}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3 mt-4">
+                          {isNewStudent && (
+                            <Input
+                              placeholder="מזהה (אנגלית)"
+                              value={studentForm.id}
+                              onChange={(e) => setStudentForm({ ...studentForm, id: e.target.value })}
+                              dir="ltr"
                             />
-                            <span className="text-sm">{svc.title}</span>
-                          </label>
-                        ))}
-                      </div>
-                    );
-                  })}
-                  {(services || []).filter((s) => !s.category).length > 0 && (
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">ללא קטגוריה</p>
-                      {(services || []).filter((s) => !s.category).map((svc) => (
-                        <label
-                          key={svc.id}
-                          className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
-                        >
-                          <Checkbox
-                            checked={studentForm.linkedServiceIds.includes(svc.id)}
-                            onCheckedChange={() => toggleServiceLink(svc.id)}
+                          )}
+                          <Input
+                            placeholder="שם"
+                            value={studentForm.name}
+                            onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
                           />
-                          <span className="text-sm">{svc.title}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="border rounded-lg p-3 space-y-3">
-                  <p className="text-sm font-semibold text-heading">קישורים</p>
-                  <Input
-                    placeholder="קישור לתיק עבודות (אופציונלי)"
-                    value={studentForm.portfolio_url}
-                    onChange={(e) =>
-                      setStudentForm({ ...studentForm, portfolio_url: e.target.value })
-                    }
-                    dir="ltr"
-                  />
-                  <Input
-                    placeholder="קישור לרזומה (אופציונלי)"
-                    value={studentForm.resume_url}
-                    onChange={(e) =>
-                      setStudentForm({ ...studentForm, resume_url: e.target.value })
-                    }
-                    dir="ltr"
-                  />
-                </div>
-
-                <Input
-                  placeholder="אימייל"
-                  value={studentForm.email}
-                  onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
-                  dir="ltr"
-                />
-                <Input
-                  placeholder="טלפון"
-                  value={studentForm.phone}
-                  onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
-                  dir="ltr"
-                />
-                <Input
-                  placeholder="אינסטגרם (אופציונלי)"
-                  value={studentForm.instagram}
-                  onChange={(e) =>
-                    setStudentForm({ ...studentForm, instagram: e.target.value })
-                  }
-                  dir="ltr"
-                />
-                <Input
-                  placeholder="פייסבוק (אופציונלי)"
-                  value={studentForm.facebook}
-                  onChange={(e) =>
-                    setStudentForm({ ...studentForm, facebook: e.target.value })
-                  }
-                  dir="ltr"
-                />
-                <Input
-                  placeholder="טיקטוק (אופציונלי)"
-                  value={studentForm.tiktok}
-                  onChange={(e) => setStudentForm({ ...studentForm, tiktok: e.target.value })}
-                  dir="ltr"
-                />
-                <Button onClick={handleSaveStudent} className="w-full">
-                  {isNewStudent ? "הוסף" : "שמור"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+                          <Input
+                            placeholder="תיאור קצר"
+                            value={studentForm.short_description}
+                            onChange={(e) =>
+                              setStudentForm({ ...studentForm, short_description: e.target.value })
+                            }
+                          />
+                          <Textarea
+                            placeholder="ביוגרפיה / תיאור מלא"
+                            value={studentForm.long_description}
+                            onChange={(e) =>
+                              setStudentForm({ ...studentForm, long_description: e.target.value })
+                            }
+                            rows={4}
+                          />
+          
+                          {/* Image upload */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-heading">תמונה</label>
+                            <div className="flex items-center gap-3">
+                              {studentForm.image && studentForm.image !== "/placeholder.svg" && (
+                                <img
+                                  src={studentForm.image}
+                                  alt="תצוגה מקדימה"
+                                  className="w-16 h-16 rounded-lg object-cover"
+                                />
+                              )}
+                              <div className="flex-1 flex gap-2">
+                                <Input
+                                  placeholder="קישור תמונה"
+                                  value={studentForm.image}
+                                  onChange={(e) => setStudentForm({ ...studentForm, image: e.target.value })}
+                                  dir="ltr"
+                                  className="flex-1"
+                                />
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  ref={studentImageRef}
+                                  className="hidden"
+                                  onChange={handleStudentImageUpload}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => studentImageRef.current?.click()}
+                                  disabled={uploadingStudentImage}
+                                >
+                                  {uploadingStudentImage ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Upload className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+          
+                            {/* Service checkboxes grouped by category */}
+                            <div className="border rounded-lg p-3 space-y-3">
+                              <p className="text-sm font-semibold text-heading">שירותים מקושרים:</p>
+                              {existingCategories.map((cat) => {
+                                const catServices = (services || []).filter((s) => s.category === cat);
+                                if (catServices.length === 0) return null;
+                                return (
+                                  <div key={cat} className="space-y-1">
+                                    <p className="text-sm font-medium text-muted-foreground">{cat}</p>
+                                    {catServices.map((svc) => (
+                                      <label
+                                        key={svc.id}
+                                        className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
+                                      >
+                                        <Checkbox
+                                          checked={studentForm.linkedServiceIds.includes(svc.id)}
+                                          onCheckedChange={() => toggleServiceLink(svc.id)}
+                                        />
+                                        <span className="text-sm">{svc.title}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                );
+                              })}
+                              {(services || []).filter((s) => !s.category).length > 0 && (
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium text-muted-foreground">ללא קטגוריה</p>
+                                  {(services || []).filter((s) => !s.category).map((svc) => (
+                                    <label
+                                      key={svc.id}
+                                      className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
+                                    >
+                                      <Checkbox
+                                        checked={studentForm.linkedServiceIds.includes(svc.id)}
+                                        onCheckedChange={() => toggleServiceLink(svc.id)}
+                                      />
+                                      <span className="text-sm">{svc.title}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+          
+                            <div className="border rounded-lg p-3 space-y-3">
+                              <p className="text-sm font-semibold text-heading">קישורים</p>
+                              <Input
+                                placeholder="קישור לתיק עבודות (אופציונלי)"
+                                value={studentForm.portfolio_url}
+                                onChange={(e) =>
+                                  setStudentForm({ ...studentForm, portfolio_url: e.target.value })
+                                }
+                                dir="ltr"
+                              />
+                              <Input
+                                placeholder="קישור לרזומה (אופציונלי)"
+                                value={studentForm.resume_url}
+                                onChange={(e) =>
+                                  setStudentForm({ ...studentForm, resume_url: e.target.value })
+                                }
+                                dir="ltr"
+                              />
+                            </div>
+          
+                            <Input
+                              placeholder="אימייל"
+                              value={studentForm.email}
+                              onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
+                              dir="ltr"
+                            />
+                            <Input
+                              placeholder="טלפון"
+                              value={studentForm.phone}
+                              onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
+                              dir="ltr"
+                            />
+                            <Input
+                              placeholder="אינסטגרם (אופציונלי)"
+                              value={studentForm.instagram}
+                              onChange={(e) =>
+                                setStudentForm({ ...studentForm, instagram: e.target.value })
+                              }
+                              dir="ltr"
+                            />
+                            <Input
+                              placeholder="פייסבוק (אופציונלי)"
+                              value={studentForm.facebook}
+                              onChange={(e) =>
+                                setStudentForm({ ...studentForm, facebook: e.target.value })
+                              }
+                              dir="ltr"
+                            />
+                            <Input
+                              placeholder="טיקטוק (אופציונלי)"
+                              value={studentForm.tiktok}
+                              onChange={(e) => setStudentForm({ ...studentForm, tiktok: e.target.value })}
+                              dir="ltr"
+                            />
+                            <Button onClick={handleSaveStudent} className="w-full">
+                              {isNewStudent ? "הוסף" : "שמור"}
+                            </Button>
+                          </div>
+                      </>
+                    </DialogContent>          </Dialog>
         )}
 
       {/* ─── Service Edit Dialog ─── */}
