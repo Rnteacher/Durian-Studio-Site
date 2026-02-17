@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 import { useStudents } from "@/hooks/useStudents";
 import { useServices } from "@/hooks/useServices";

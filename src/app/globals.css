@@ -165,7 +165,7 @@
 
   @layer base {
     * {
-      @apply border-border;
+      @apply border;
     }
 
     body {

@@ -274,115 +274,239 @@ export default function Admin() {
     else { toast({ title: "נמחק!" }); queryClient.invalidateQueries({ queryKey: ["services"] }); }
   };
 
-  return (
-    <main className="flex-1 container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-rubik text-3xl font-bold text-heading">ניהול</h1>
-        <Button variant="outline" onClick={handleLogout} className="gap-1"><LogOut className="h-4 w-4" />יציאה</Button>
-      </div>
-
-      <Tabs defaultValue="services" dir="rtl">
-        <TabsList className="mb-6">
-          <TabsTrigger value="services">שירותים</TabsTrigger>
-          <TabsTrigger value="students">חניכים</TabsTrigger>
-        </TabsList>
-
-        {/* ─── Services Tab ─── */}
-        <TabsContent value="services">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-rubik text-xl font-semibold text-heading">שירותים</h2>
-            <Button onClick={openNewService} className="gap-1"><Plus className="h-4 w-4" />שירות חדש</Button>
+    return (
+      <>
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="font-rubik text-3xl font-bold text-heading">ניהול</h1>
+            <Button variant="outline" onClick={handleLogout} className="gap-1">
+              <LogOut className="h-4 w-4" />
+              יציאה
+            </Button>
           </div>
-          {servicesLoading ? <p>טוען...</p> : (
-            <div className="grid gap-3">
-              {services?.map((s) => (
-                <div key={s.id} className="flex items-center gap-4 bg-card rounded-xl p-4 shadow-sm">
-                  <img src={s.image} alt={s.title} className="w-16 h-10 rounded-lg object-cover" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-heading">{s.title}</p>
-                    <p className="text-sm text-muted-foreground truncate">{s.shortDescription}</p>
-                  </div>
-                  <Badge variant="secondary" className="text-xs">{s.slug}</Badge>
-                  <div className="flex gap-1 shrink-0">
-                    <Button size="icon" variant="ghost" onClick={() => openEditService(s)}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleDeleteService(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* ─── Students Tab ─── */}
-        <TabsContent value="students">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-rubik text-xl font-semibold text-heading">חניכים</h2>
-            <Button onClick={openNewStudent} className="gap-1"><Plus className="h-4 w-4" />חניך חדש</Button>
-          </div>
-          {studentsLoading ? <p>טוען...</p> : (
-            <div className="grid gap-3">
-              {students?.map((s) => (
-                <div key={s.id} className="flex items-center gap-4 bg-card rounded-xl p-4 shadow-sm">
-                  <img src={s.image} alt={s.name} className="w-12 h-12 rounded-full object-cover" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-heading">{s.name}</p>
-                    <p className="text-sm text-muted-foreground truncate">{s.shortDescription}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    {s.categories.map(c => <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>)}
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button size="icon" variant="ghost" onClick={() => openEditStudent(s)}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleDeleteStudent(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* ─── Student Edit Dialog ─── */}
-      <Dialog open={studentEditOpen} onOpenChange={setStudentEditOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{isNewStudent ? "הוספת חניך" : "עריכת חניך"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 mt-4">
-            {isNewStudent && (
-              <Input placeholder="מזהה (אנגלית)" value={studentForm.id} onChange={e => setStudentForm({...studentForm, id: e.target.value})} dir="ltr" />
-            )}
-            <Input placeholder="שם" value={studentForm.name} onChange={e => setStudentForm({...studentForm, name: e.target.value})} />
-            <Input placeholder="תיאור קצר" value={studentForm.short_description} onChange={e => setStudentForm({...studentForm, short_description: e.target.value})} />
-            <Textarea placeholder="ביוגרפיה / תיאור מלא" value={studentForm.long_description} onChange={e => setStudentForm({...studentForm, long_description: e.target.value})} rows={4} />
-            
-            {/* Image upload */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-heading">תמונה</label>
-              <div className="flex items-center gap-3">
-                {studentForm.image && studentForm.image !== "/placeholder.svg" && (
-                  <img src={studentForm.image} alt="תצוגה מקדימה" className="w-16 h-16 rounded-lg object-cover" />
-                )}
-                <div className="flex-1 flex gap-2">
-                  <Input placeholder="קישור תמונה" value={studentForm.image} onChange={e => setStudentForm({...studentForm, image: e.target.value})} dir="ltr" className="flex-1" />
-                  <input type="file" accept="image/*" ref={studentImageRef} className="hidden" onChange={handleStudentImageUpload} />
-                  <Button type="button" variant="outline" size="icon" onClick={() => studentImageRef.current?.click()} disabled={uploadingStudentImage}>
-                    {uploadingStudentImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  </Button>
-                </div>
+  
+          <Tabs defaultValue="services" dir="rtl">
+            <TabsList className="mb-6">
+              <TabsTrigger value="services">שירותים</TabsTrigger>
+              <TabsTrigger value="students">חניכים</TabsTrigger>
+            </TabsList>
+  
+            {/* ─── Services Tab ─── */}
+            <TabsContent value="services">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-rubik text-xl font-semibold text-heading">שירותים</h2>
+                <Button onClick={openNewService} className="gap-1">
+                  <Plus className="h-4 w-4" />
+                  שירות חדש
+                </Button>
               </div>
-
-              {/* Service checkboxes grouped by category */}
-              <div className="border rounded-lg p-3 space-y-3">
-                <p className="text-sm font-semibold text-heading">שירותים מקושרים:</p>
-                {existingCategories.map(cat => {
-                  const catServices = (services || []).filter(s => s.category === cat);
-                  if (catServices.length === 0) return null;
-                  return (
-                    <div key={cat} className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">{cat}</p>
-                      {catServices.map(svc => (
-                        <label key={svc.id} className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50">
+              {servicesLoading ? (
+                <p>טוען...</p>
+              ) : (
+                <div className="grid gap-3">
+                  {services?.map((s) => (
+                    <div
+                      key={s.id}
+                      className="flex items-center gap-4 bg-card rounded-xl p-4 shadow-sm"
+                    >
+                      <img
+                        src={s.image}
+                        alt={s.title}
+                        className="w-16 h-10 rounded-lg object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-heading">{s.title}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {s.shortDescription}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {s.slug}
+                      </Badge>
+                      <div className="flex gap-1 shrink-0">
+                        <Button size="icon" variant="ghost" onClick={() => openEditService(s)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDeleteService(s.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+  
+            {/* ─── Students Tab ─── */}
+            <TabsContent value="students">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-rubik text-xl font-semibold text-heading">חניכים</h2>
+                <Button onClick={openNewStudent} className="gap-1">
+                  <Plus className="h-4 w-4" />
+                  חניך חדש
+                </Button>
+              </div>
+              {studentsLoading ? (
+                <p>טוען...</p>
+              ) : (
+                <div className="grid gap-3">
+                  {students?.map((s) => (
+                    <div
+                      key={s.id}
+                      className="flex items-center gap-4 bg-card rounded-xl p-4 shadow-sm"
+                    >
+                      <img
+                        src={s.image}
+                        alt={s.name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-heading">{s.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {s.shortDescription}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        {s.categories.map((c) => (
+                          <Badge key={c} variant="secondary" className="text-xs">
+                            {c}
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button size="icon" variant="ghost" onClick={() => openEditStudent(s)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDeleteStudent(s.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </main>
+  
+        {/* ─── Student Edit Dialog ─── */}
+        <Dialog open={studentEditOpen} onOpenChange={setStudentEditOpen}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{isNewStudent ? "הוספת חניך" : "עריכת חניך"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 mt-4">
+              {isNewStudent && (
+                <Input
+                  placeholder="מזהה (אנגלית)"
+                  value={studentForm.id}
+                  onChange={(e) => setStudentForm({ ...studentForm, id: e.target.value })}
+                  dir="ltr"
+                />
+              )}
+              <Input
+                placeholder="שם"
+                value={studentForm.name}
+                onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
+              />
+              <Input
+                placeholder="תיאור קצר"
+                value={studentForm.short_description}
+                onChange={(e) =>
+                  setStudentForm({ ...studentForm, short_description: e.target.value })
+                }
+              />
+              <Textarea
+                placeholder="ביוגרפיה / תיאור מלא"
+                value={studentForm.long_description}
+                onChange={(e) =>
+                  setStudentForm({ ...studentForm, long_description: e.target.value })
+                }
+                rows={4}
+              />
+  
+              {/* Image upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-heading">תמונה</label>
+                <div className="flex items-center gap-3">
+                  {studentForm.image && studentForm.image !== "/placeholder.svg" && (
+                    <img
+                      src={studentForm.image}
+                      alt="תצוגה מקדימה"
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="flex-1 flex gap-2">
+                    <Input
+                      placeholder="קישור תמונה"
+                      value={studentForm.image}
+                      onChange={(e) => setStudentForm({ ...studentForm, image: e.target.value })}
+                      dir="ltr"
+                      className="flex-1"
+                    />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={studentImageRef}
+                      className="hidden"
+                      onChange={handleStudentImageUpload}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => studentImageRef.current?.click()}
+                      disabled={uploadingStudentImage}
+                    >
+                      {uploadingStudentImage ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+  
+                {/* Service checkboxes grouped by category */}
+                <div className="border rounded-lg p-3 space-y-3">
+                  <p className="text-sm font-semibold text-heading">שירותים מקושרים:</p>
+                  {existingCategories.map((cat) => {
+                    const catServices = (services || []).filter((s) => s.category === cat);
+                    if (catServices.length === 0) return null;
+                    return (
+                      <div key={cat} className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">{cat}</p>
+                        {catServices.map((svc) => (
+                          <label
+                            key={svc.id}
+                            className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
+                          >
+                            <Checkbox
+                              checked={studentForm.linkedServiceIds.includes(svc.id)}
+                              onCheckedChange={() => toggleServiceLink(svc.id)}
+                            />
+                            <span className="text-sm">{svc.title}</span>
+                          </label>
+                        ))}
+                      </div>
+                    );
+                  })}
+                  {(services || []).filter((s) => !s.category).length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">ללא קטגוריה</p>
+                      {(services || []).filter((s) => !s.category).map((svc) => (
+                        <label
+                          key={svc.id}
+                          className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
+                        >
                           <Checkbox
                             checked={studentForm.linkedServiceIds.includes(svc.id)}
                             onCheckedChange={() => toggleServiceLink(svc.id)}
@@ -391,127 +515,214 @@ export default function Admin() {
                         </label>
                       ))}
                     </div>
-                  );
-                })}
-                {(services || []).filter(s => !s.category).length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">ללא קטגוריה</p>
-                    {(services || []).filter(s => !s.category).map(svc => (
-                      <label key={svc.id} className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50">
+                  )}
+                </div>
+  
+                <div className="border rounded-lg p-3 space-y-3">
+                  <p className="text-sm font-semibold text-heading">קישורים</p>
+                  <Input
+                    placeholder="קישור לתיק עבודות (אופציונלי)"
+                    value={studentForm.portfolio_url}
+                    onChange={(e) =>
+                      setStudentForm({ ...studentForm, portfolio_url: e.target.value })
+                    }
+                    dir="ltr"
+                  />
+                  <Input
+                    placeholder="קישור לרזומה (אופציונלי)"
+                    value={studentForm.resume_url}
+                    onChange={(e) =>
+                      setStudentForm({ ...studentForm, resume_url: e.target.value })
+                    }
+                    dir="ltr"
+                  />
+                </div>
+  
+                <Input
+                  placeholder="אימייל"
+                  value={studentForm.email}
+                  onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
+                  dir="ltr"
+                />
+                <Input
+                  placeholder="טלפון"
+                  value={studentForm.phone}
+                  onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
+                  dir="ltr"
+                />
+                <Input
+                  placeholder="אינסטגרם (אופציונלי)"
+                  value={studentForm.instagram}
+                  onChange={(e) =>
+                    setStudentForm({ ...studentForm, instagram: e.target.value })
+                  }
+                  dir="ltr"
+                />
+                <Input
+                  placeholder="פייסבוק (אופציונלי)"
+                  value={studentForm.facebook}
+                  onChange={(e) =>
+                    setStudentForm({ ...studentForm, facebook: e.target.value })
+                  }
+                  dir="ltr"
+                />
+                <Input
+                  placeholder="טיקטוק (אופציונלי)"
+                  value={studentForm.tiktok}
+                  onChange={(e) => setStudentForm({ ...studentForm, tiktok: e.target.value })}
+                  dir="ltr"
+                />
+                <Button onClick={handleSaveStudent} className="w-full">
+                  {isNewStudent ? "הוסף" : "שמור"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+  
+          {/* ─── Service Edit Dialog ─── */}
+          <Dialog open={serviceEditOpen} onOpenChange={setServiceEditOpen}>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{isNewService ? "הוספת שירות" : "עריכת שירות"}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 mt-4">
+                <Input
+                  placeholder="Slug (אנגלית, לדוגמה: video-editing)"
+                  value={serviceForm.slug}
+                  onChange={(e) => setServiceForm({ ...serviceForm, slug: e.target.value })}
+                  dir="ltr"
+                />
+                <Input
+                  placeholder="שם השירות"
+                  value={serviceForm.title}
+                  onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
+                />
+                <Input
+                  placeholder="תיאור קצר"
+                  value={serviceForm.short_description}
+                  onChange={(e) =>
+                    setServiceForm({ ...serviceForm, short_description: e.target.value })
+                  }
+                />
+                <Textarea
+                  placeholder="תיאור מלא"
+                  value={serviceForm.long_description}
+                  onChange={(e) =>
+                    setServiceForm({ ...serviceForm, long_description: e.target.value })
+                  }
+                  rows={4}
+                />
+  
+                {/* Category */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-heading">קטגוריה</label>
+                  <select
+                    value={isCreatingNewCategory ? "__new__" : serviceForm.category}
+                    onChange={(e) => {
+                      if (e.target.value === "__new__") {
+                        setIsCreatingNewCategory(true);
+                        setNewCategoryInput("");
+                        setServiceForm({ ...serviceForm, category: "" });
+                      } else {
+                        setIsCreatingNewCategory(false);
+                        setServiceForm({ ...serviceForm, category: e.target.value });
+                      }
+                    }}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">בחר קטגוריה...</option>
+                    {existingCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                    <option value="__new__">+ קטגוריה חדשה</option>
+                  </select>
+                  {isCreatingNewCategory && (
+                    <Input
+                      placeholder="שם הקטגוריה החדשה"
+                      value={newCategoryInput}
+                      onChange={(e) => {
+                        setNewCategoryInput(e.target.value);
+                        setServiceForm({ ...serviceForm, category: e.target.value });
+                      }}
+                      autoFocus
+                    />
+                  )}
+                </div>
+  
+                {/* Image upload */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-heading">תמונה</label>
+                  <div className="flex items-center gap-3">
+                    {serviceForm.image && serviceForm.image !== "/placeholder.svg" && (
+                      <img
+                        src={serviceForm.image}
+                        alt="תצוגה מקדימה"
+                        className="w-16 h-10 rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="flex-1 flex gap-2">
+                      <Input
+                        placeholder="קישור תמונה"
+                        value={serviceForm.image}
+                        onChange={(e) => setServiceForm({ ...serviceForm, image: e.target.value })}
+                        dir="ltr"
+                        className="flex-1"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={serviceImageRef}
+                        className="hidden"
+                        onChange={handleServiceImageUpload}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => serviceImageRef.current?.click()}
+                        disabled={uploadingServiceImage}
+                      >
+                        {uploadingServiceImage ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+  
+                {/* Link students */}
+                <div className="border rounded-lg p-3 space-y-2">
+                  <p className="text-sm font-semibold text-heading">חניכים מקושרים:</p>
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {students?.map((s) => (
+                      <label
+                        key={s.id}
+                        className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
+                      >
                         <Checkbox
-                          checked={studentForm.linkedServiceIds.includes(svc.id)}
-                          onCheckedChange={() => toggleServiceLink(svc.id)}
+                          checked={serviceForm.linkedStudentIds.includes(s.id)}
+                          onCheckedChange={() => toggleStudentLink(s.id)}
                         />
-                        <span className="text-sm">{svc.title}</span>
+                        <img
+                          src={s.image}
+                          alt={s.name}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                        <span className="text-sm">{s.name}</span>
                       </label>
                     ))}
                   </div>
-                )}
-              </div>
-
-              <div className="border rounded-lg p-3 space-y-3">
-                <p className="text-sm font-semibold text-heading">קישורים</p>
-                <Input placeholder="קישור לתיק עבודות (אופציונלי)" value={studentForm.portfolio_url} onChange={e => setStudentForm({...studentForm, portfolio_url: e.target.value})} dir="ltr" />
-                <Input placeholder="קישור לרזומה (אופציונלי)" value={studentForm.resume_url} onChange={e => setStudentForm({...studentForm, resume_url: e.target.value})} dir="ltr" />
-              </div>
-
-              <Input placeholder="אימייל" value={studentForm.email} onChange={e => setStudentForm({...studentForm, email: e.target.value})} dir="ltr" />
-              <Input placeholder="טלפון" value={studentForm.phone} onChange={e => setStudentForm({...studentForm, phone: e.target.value})} dir="ltr" />
-              <Input placeholder="אינסטגרם (אופציונלי)" value={studentForm.instagram} onChange={e => setStudentForm({...studentForm, instagram: e.target.value})} dir="ltr" />
-              <Input placeholder="פייסבוק (אופציונלי)" value={studentForm.facebook} onChange={e => setStudentForm({...studentForm, facebook: e.target.value})} dir="ltr" />
-              <Input placeholder="טיקטוק (אופציונלי)" value={studentForm.tiktok} onChange={e => setStudentForm({...studentForm, tiktok: e.target.value})} dir="ltr" />
-              <Button onClick={handleSaveStudent} className="w-full">{isNewStudent ? "הוסף" : "שמור"}</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* ─── Service Edit Dialog ─── */}
-        <Dialog open={serviceEditOpen} onOpenChange={setServiceEditOpen}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{isNewService ? "הוספת שירות" : "עריכת שירות"}</DialogTitle>
-          </DialogHeader>
-            <div className="space-y-3 mt-4">
-              <Input placeholder="Slug (אנגלית, לדוגמה: video-editing)" value={serviceForm.slug} onChange={e => setServiceForm({...serviceForm, slug: e.target.value})} dir="ltr" />
-              <Input placeholder="שם השירות" value={serviceForm.title} onChange={e => setServiceForm({...serviceForm, title: e.target.value})} />
-              <Input placeholder="תיאור קצר" value={serviceForm.short_description} onChange={e => setServiceForm({...serviceForm, short_description: e.target.value})} />
-              <Textarea placeholder="תיאור מלא" value={serviceForm.long_description} onChange={e => setServiceForm({...serviceForm, long_description: e.target.value})} rows={4} />
-
-              {/* Category */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-heading">קטגוריה</label>
-                <select
-                  value={isCreatingNewCategory ? "__new__" : serviceForm.category}
-                  onChange={e => {
-                    if (e.target.value === "__new__") {
-                      setIsCreatingNewCategory(true);
-                      setNewCategoryInput("");
-                      setServiceForm({...serviceForm, category: ""});
-                    } else {
-                      setIsCreatingNewCategory(false);
-                      setServiceForm({...serviceForm, category: e.target.value});
-                    }
-                  }}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">בחר קטגוריה...</option>
-                  {existingCategories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                  <option value="__new__">+ קטגוריה חדשה</option>
-                </select>
-                {isCreatingNewCategory && (
-                  <Input
-                    placeholder="שם הקטגוריה החדשה"
-                    value={newCategoryInput}
-                    onChange={e => {
-                      setNewCategoryInput(e.target.value);
-                      setServiceForm({...serviceForm, category: e.target.value});
-                    }}
-                    autoFocus
-                  />
-                )}
-              </div>
-              
-              {/* Image upload */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-heading">תמונה</label>
-                <div className="flex items-center gap-3">
-                  {serviceForm.image && serviceForm.image !== "/placeholder.svg" && (
-                    <img src={serviceForm.image} alt="תצוגה מקדימה" className="w-16 h-10 rounded-lg object-cover" />
-                  )}
-                  <div className="flex-1 flex gap-2">
-                    <Input placeholder="קישור תמונה" value={serviceForm.image} onChange={e => setServiceForm({...serviceForm, image: e.target.value})} dir="ltr" className="flex-1" />
-                    <input type="file" accept="image/*" ref={serviceImageRef} className="hidden" onChange={handleServiceImageUpload} />
-                    <Button type="button" variant="outline" size="icon" onClick={() => serviceImageRef.current?.click()} disabled={uploadingServiceImage}>
-                      {uploadingServiceImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    </Button>
-                  </div>
                 </div>
+  
+                <Button onClick={handleSaveService} className="w-full">
+                  {isNewService ? "הוסף" : "שמור"}
+                </Button>
               </div>
-
-              {/* Link students */}
-              <div className="border rounded-lg p-3 space-y-2">
-                <p className="text-sm font-semibold text-heading">חניכים מקושרים:</p>
-                <div className="max-h-48 overflow-y-auto space-y-1">
-                  {students?.map((s) => (
-                    <label key={s.id} className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded hover:bg-muted/50">
-                      <Checkbox
-                        checked={serviceForm.linkedStudentIds.includes(s.id)}
-                        onCheckedChange={() => toggleStudentLink(s.id)}
-                      />
-                      <img src={s.image} alt={s.name} className="w-6 h-6 rounded-full object-cover" />
-                      <span className="text-sm">{s.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <Button onClick={handleSaveService} className="w-full">{isNewService ? "הוסף" : "שמור"}</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </main>
-    </div>
-  );
-}
+            </DialogContent>
+          </Dialog>
+      </>
+    );}
