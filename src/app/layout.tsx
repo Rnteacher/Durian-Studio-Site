@@ -1,23 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Rubik, Heebo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const rubik = Rubik({
+  variable: "--font-rubik",
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const heebo = Heebo({
+  variable: "--font-heebo",
+  subsets: ["hebrew", "latin"],
+  weight: ["300", "400", "500", "700", "900"],
 });
 
 export const metadata: Metadata = {
-  title: "Durian Studio Site",
-  description: "Official website for Durian Studio",
+  title: "סטודיו דוריאן | כישרונות צעירים. שירותים אמיתיים.",
+  description: "סטודיו דוריאן — יוזמת נוער יצירתית מתיכון החממה בהוד השרון. שירותים מקצועיים לעמותות ועסקים קטנים.",
+  openGraph: {
+    title: "סטודיו דוריאן",
+    description: "כישרונות צעירים. שירותים אמיתיים. השפעה אמיתית.",
+    locale: "he_IL",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -26,10 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="he" dir="rtl">
+      <body className={`${rubik.variable} ${heebo.variable} antialiased`}>
         <Providers>
           <div className="min-h-screen flex flex-col">
             <Navbar />

@@ -12,6 +12,7 @@ const Navbar = () => {
 
   const links = [
     { href: "/", label: "בית" },
+    { href: "/services", label: "שירותים" },
     { href: "/students", label: "החניכים שלנו" },
     { href: "/about", label: "אודות" },
     { href: "/contact", label: "יצירת קשר" },

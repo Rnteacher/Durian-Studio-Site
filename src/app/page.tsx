@@ -1,11 +1,11 @@
 import HeroSection from "@/components/HeroSection";
-import StudentGrid from "@/components/StudentGrid"; // Import StudentGrid
+import ServicesSection from "@/components/ServicesSection";
 
 export default function Home() {
   return (
     <main className="flex-1">
       <HeroSection />
-      <StudentGrid /> {/* Render StudentGrid */}
+      <ServicesSection />
     </main>
   );
 }
